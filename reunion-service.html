@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedRéunion</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:    #faf8f4;
+  --bg2:   #f0ebe2;
+  --bg3:   #e8dfd0;
+  --white: #ffffff;
+  --ink:   #1a1814;
+  --ink2:  #6b6760;
+  --ink3:  #b5b2ac;
+  --line:  rgba(26,24,20,0.08);
+  --hospi:    #8fb4c8;
+  --hospi-bg: rgba(143,180,200,0.12);
+  --bloc:     #c8a870;
+  --bloc-bg:  rgba(200,168,112,0.12);
+  --consult:  #7a9e87;
+  --consult-bg: rgba(122,158,135,0.12);
+  --urg:      #e8a598;
+  --urg-bg:   rgba(232,165,152,0.12);
+  --stable:   #7a9e87;
+  --watch:    #c8a870;
+  --urgent:   #e8a598;
+  --r: 8px;
+  --rl: 12px;
+  --sh: 0 1px 3px rgba(26,24,20,0.06);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html,body { height:100%; overflow:hidden; }
+body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--ink); font-size:13px; line-height:1.5; }
+::-webkit-scrollbar { width:5px; height:5px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--line); border-radius:3px; }
+
+#app { display:flex; height:100vh; }
+
+/* SIDEBAR */
+#sidebar { width:210px; background:var(--bg); border-right:1px solid var(--line); display:flex; flex-direction:column; flex-shrink:0; }
+.logo { padding:16px 18px 12px; border-bottom:1px solid var(--line); }
+.logo-name { font-family:'DM Mono',monospace; font-size:13px; letter-spacing:.05em; color:var(--ink); }
+.logo-date { font-size:11px; color:var(--ink3); margin-top:2px; font-family:'DM Mono',monospace; }
+.nav { flex:1; overflow-y:auto; padding:8px 0; }
+.nav-group { margin-bottom:2px; }
+.nav-label { padding:6px 18px 2px; font-size:9px; font-family:'DM Mono',monospace; letter-spacing:.12em; text-transform:uppercase; color:var(--ink3); }
+.nav-item { display:flex; align-items:center; gap:9px; padding:7px 18px; cursor:pointer; color:var(--ink2); font-family:'DM Mono',monospace; font-size:12px; transition:opacity .12s; position:relative; }
+.nav-item:hover { opacity:.5; }
+.nav-item.on { color:var(--ink); }
+.nav-item.on .npip { opacity:1; }
+.npip { position:absolute; left:0; top:50%; transform:translateY(-50%); width:2px; height:16px; border-radius:0 2px 2px 0; opacity:0; transition:opacity .12s; background:var(--ink); }
+.ndot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.nct { margin-left:auto; font-size:10px; color:var(--ink3); font-family:'DM Mono',monospace; }
+.sfoot { padding:10px 12px; border-top:1px solid var(--line); display:flex; gap:6px; }
+
+/* MAIN */
+#main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+#topbar { height:46px; background:var(--bg); border-bottom:1px solid var(--line); display:flex; align-items:center; padding:0 20px; gap:12px; flex-shrink:0; }
+.tb-title { font-family:'DM Mono',monospace; font-size:12px; color:var(--ink); flex:1; }
+.srch { display:flex; align-items:center; gap:7px; background:var(--bg2); border:1px solid var(--line); border-radius:999px; padding:4px 12px; width:180px; }
+.srch input { border:none; outline:none; background:none; font-family:'DM Mono',monospace; font-size:11px; color:var(--ink); width:100%; }
+.srch input::placeholder { color:var(--ink3); }
+#content { flex:1; display:flex; overflow:hidden; }
+.page { flex:1; overflow-y:auto; padding:18px 20px; display:none; }
+.page.on { display:block; }
+
+/* TODO PANEL */
+#tpanel { width:256px; background:var(--bg); border-left:1px solid var(--line); display:flex; flex-direction:column; flex-shrink:0; }
+.tph { padding:12px 14px 8px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; }
+.tph-t { font-family:'DM Mono',monospace; font-size:12px; color:var(--ink); }
+.tpf { display:flex; gap:4px; padding:6px 10px; border-bottom:1px solid var(--line); }
+.tfb { flex:1; padding:3px 0; border-radius:999px; border:1px solid var(--line); background:none; font-family:'DM Mono',monospace; font-size:10px; color:var(--ink3); cursor:pointer; transition:all .12s; }
+.tfb.on { background:var(--ink); color:var(--bg); border-color:var(--ink); }
+.tpl { flex:1; overflow-y:auto; padding:8px; }
+
+/* TODO CARD */
+.tcard { background:var(--bg2); border-radius:var(--r); padding:8px 9px; margin-bottom:6px; border:1px solid transparent; transition:border-color .12s; }
+.tcard:hover { border-color:var(--line); }
+.tcard.done { opacity:.35; }
+.tcr { display:flex; gap:8px; align-items:flex-start; }
+.tck { width:13px; height:13px; border-radius:3px; border:1px solid var(--ink3); flex-shrink:0; margin-top:2px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .12s; }
+.tck.on { background:var(--stable); border-color:var(--stable); }
+.tck.on::after { content:'v'; font-family:'DM Mono',monospace; font-size:8px; color:#fff; }
+.tct { font-family:'DM Mono',monospace; font-size:11px; flex:1; line-height:1.45; color:var(--ink2); }
+.tct.done { text-decoration:line-through; }
+.tctags { display:flex; gap:3px; flex-wrap:wrap; margin-top:4px; }
+.tcasgn { margin-top:4px; }
+.tcasgn select { width:100%; font-family:'DM Mono',monospace; font-size:10px; background:var(--bg); border:1px solid var(--line); border-radius:4px; padding:2px 5px; color:var(--ink2); outline:none; }
+
+/* CHIPS */
+.chip { display:inline-flex; align-items:center; padding:1px 6px; border-radius:999px; font-family:'DM Mono',monospace; font-size:9px; white-space:nowrap; border:1px solid transparent; }
+.ch-hospi { background:var(--hospi-bg); color:var(--hospi); border-color:rgba(143,180,200,0.25); }
+.ch-bloc { background:var(--bloc-bg); color:var(--bloc); border-color:rgba(200,168,112,0.25); }
+.ch-consult { background:var(--consult-bg); color:var(--consult); border-color:rgba(122,158,135,0.25); }
+.ch-urg { background:var(--urg-bg); color:var(--urg); border-color:rgba(232,165,152,0.25); }
+.ch-stable { background:var(--consult-bg); color:var(--consult); border-color:rgba(122,158,135,0.25); }
+.ch-watch { background:var(--bloc-bg); color:var(--bloc); border-color:rgba(200,168,112,0.25); }
+.ch-urgent { background:var(--urg-bg); color:var(--urg); border-color:rgba(232,165,152,0.25); }
+.ch-diag { background:rgba(168,158,200,0.1); color:#a89ec8; border-color:rgba(168,158,200,0.25); }
+.ch-ther { background:rgba(200,168,112,0.1); color:var(--bloc); border-color:rgba(200,168,112,0.2); }
+.ch-today { background:rgba(200,168,112,0.1); color:var(--bloc); border-color:rgba(200,168,112,0.2); }
+.ch-other { background:var(--bg3); color:var(--ink3); border-color:var(--line); }
+.ch-person { background:var(--hospi-bg); color:var(--hospi); border-color:rgba(143,180,200,0.25); }
+
+/* BUTTONS */
+.btn { display:inline-flex; align-items:center; gap:5px; padding:5px 12px; border-radius:999px; border:1px solid var(--line); background:none; font-family:'DM Mono',monospace; font-size:11px; color:var(--ink2); cursor:pointer; transition:all .12s; white-space:nowrap; }
+.btn:hover { color:var(--ink); border-color:var(--ink3); }
+.btn-d { background:var(--ink); color:var(--bg); border-color:var(--ink); }
+.btn-d:hover { opacity:.8; color:var(--bg); }
+.btn-add { width:100%; padding:6px; border-radius:var(--r); border:1px dashed var(--line); background:none; font-family:'DM Mono',monospace; font-size:11px; color:var(--ink3); cursor:pointer; transition:all .12s; margin-top:4px; }
+.btn-add:hover { border-color:var(--ink3); color:var(--ink2); }
+
+/* PAGE HEADER */
+.ph { margin-bottom:16px; display:flex; align-items:center; gap:10px; }
+.ph-t { font-family:'DM Mono',monospace; font-size:14px; color:var(--ink); flex:1; }
+.ph-s { font-family:'DM Mono',monospace; font-size:10px; color:var(--ink3); margin-top:1px; }
+
+/* STATS */
+.stats { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+.stat { background:var(--bg2); border:1px solid var(--line); border-radius:var(--r); padding:10px 14px; min-width:80px; }
+.stat-n { font-family:'DM Mono',monospace; font-size:22px; line-height:1; }
+.stat-l { font-family:'DM Mono',monospace; font-size:9px; color:var(--ink3); margin-top:3px; text-transform:uppercase; letter-spacing:.08em; }
+
+/* SEC LABEL */
+.slbl { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink3); margin:14px 0 6px; display:flex; align-items:center; gap:8px; }
+.slbl::after { content:''; flex:1; height:1px; background:var(--line); }
+
+/* PATIENT CARD */
+.ptcard { background:var(--bg); border:1px solid var(--line); border-radius:var(--r); padding:10px 12px; margin-bottom:6px; cursor:pointer; transition:opacity .12s; display:flex; align-items:center; gap:10px; }
+.ptcard:hover { opacity:.65; }
+.ptav { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:11px; flex-shrink:0; color:var(--ink); }
+.pti { flex:1; min-width:0; }
+.ptn { font-family:'DM Mono',monospace; font-size:12px; color:var(--ink); }
+.ptm { font-family:'DM Mono',monospace; font-size:10px; color:var(--ink3); margin-top:1px; }
+.ptrt { display:flex; flex-direction:column; align-items:flex-end; gap:3px; }
+.alert-s { font-family:'DM Mono',monospace; font-size:10px; color:var(--urg); margin-top:2px; }
+.disc-s { font-family:'DM Mono',monospace; font-size:10px; color:var(--bloc); margin-top:1px; }
+
+/* OVERVIEW ALERT CARD */
+.acard { background:var(--white); border:1px solid var(--line); border-left:3px solid var(--urg); border-radius:var(--r); padding:11px 14px; margin-bottom:8px; cursor:pointer; transition:box-shadow .12s; display:flex; gap:10px; align-items:flex-start; }
+.acard:hover { box-shadow:0 1px 4px rgba(0,0,0,.08); }
+.acard.disc { border-left-color:var(--watch); }
+.acdot { width:8px; height:8px; border-radius:50%; flex-shrink:0; margin-top:5px; }
+.acb { flex:1; }
+.acn { font-weight:700; font-size:13px; }
+.aci { font-size:12px; color:var(--ink2); margin-top:3px; }
+
+/* TODO ROW */
+.tdrow { display:flex; align-items:center; gap:9px; padding:8px 12px; background:var(--white); border:1px solid var(--line); border-radius:var(--r); margin-bottom:6px; }
+.tdrow.done { opacity:.4; }
+
+/* MODAL */
+#overlay { position:fixed; inset:0; background:rgba(30,28,26,.35); backdrop-filter:blur(3px); z-index:100; display:none; align-items:center; justify-content:center; padding:20px; }
+#overlay.open { display:flex; }
+.modal { background:var(--white); border-radius:var(--rl); box-shadow:0 20px 60px rgba(0,0,0,.15); width:100%; max-width:820px; max-height:92vh; display:flex; flex-direction:column; overflow:hidden; animation:mIn .18s ease; }
+@keyframes mIn { from{opacity:0;transform:scale(.97) translateY(6px)} to{opacity:1;transform:none} }
+.mh { padding:18px 22px 14px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:14px; flex-shrink:0; }
+.mhav { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:16px; color:#fff; flex-shrink:0; }
+.mhname { font-family:'Lora',serif; font-weight:600; font-size:19px; }
+.mhmeta { font-size:12px; color:var(--ink3); display:flex; gap:10px; flex-wrap:wrap; margin-top:2px; }
+.mhrt { margin-left:auto; display:flex; gap:6px; align-items:center; }
+.mclose { width:30px; height:30px; border-radius:50%; background:var(--bg); border:1px solid var(--line); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:14px; color:var(--ink3); transition:all .12s; }
+.mclose:hover { background:var(--urg-bg); color:var(--urg); border-color:var(--urg); }
+.mtabs { display:flex; border-bottom:1px solid var(--line); padding:0 22px; overflow-x:auto; flex-shrink:0; }
+.mtab { padding:10px 14px; cursor:pointer; font-size:12px; font-weight:700; color:var(--ink3); border-bottom:2px solid transparent; white-space:nowrap; transition:all .12s; }
+.mtab:hover { color:var(--ink); }
+.mtab.on { color:var(--ink); border-bottom-color:var(--ink); }
+.mbody { flex:1; overflow-y:auto; padding:20px 22px; }
+
+/* ENTRIES */
+.entry { display:flex; gap:12px; padding:10px 0; border-bottom:1px solid var(--line); }
+.entry:last-child { border-bottom:none; }
+.edate { font-size:11px; font-weight:700; color:var(--ink3); width:64px; flex-shrink:0; padding-top:1px; }
+.etxt { font-size:13px; color:var(--ink2); line-height:1.6; flex:1; }
+.ae { display:flex; gap:8px; margin-top:12px; }
+.aeinp { flex:1; background:var(--bg); border:1px solid var(--line); border-radius:var(--r); padding:8px 11px; font-family:'Nunito',sans-serif; font-size:12px; color:var(--ink); outline:none; resize:none; min-height:70px; transition:border-color .12s; }
+.aeinp:focus { border-color:var(--ink3); }
+
+/* SUMMARY */
+.sumbox { background:linear-gradient(135deg,#f0f7ff,#f0fdf8); border:1px solid #d9edf8; border-radius:var(--rl); padding:15px 17px; margin-bottom:16px; cursor:pointer; }
+.sumlbl { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.8px; color:var(--hospi); margin-bottom:5px; }
+.sumtxt { font-size:13px; color:var(--ink2); line-height:1.65; font-family:'Lora',serif; font-style:italic; }
+
+/* DISCUSS */
+.dbox { background:var(--bloc-bg); border:1px solid #f0d4b0; border-radius:var(--r); padding:12px 15px; margin-bottom:16px; }
+.dlbl { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.8px; color:var(--bloc); margin-bottom:8px; }
+.ditem { font-size:12px; color:var(--ink2); padding:3px 0; border-bottom:1px solid #f0d4b0; }
+.ditem:last-child { border-bottom:none; }
+.ditem::before { content:'-> '; color:var(--bloc); font-weight:700; }
+
+/* MISSING */
+.mbox { background:var(--urg-bg); border:1px solid #f0c4c6; border-radius:var(--r); padding:10px 15px; margin-bottom:12px; }
+.mlbl { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.8px; color:var(--urg); margin-bottom:4px; }
+.mitem { font-size:12px; color:var(--urg); font-weight:600; }
+.mitem::before { content:'! '; }
+
+/* CHECKLIST */
+.clpills { display:flex; gap:6px; flex-wrap:wrap; margin:8px 0 12px; }
+.clpill { padding:5px 12px; border-radius:20px; background:var(--bg); border:1px solid var(--line); font-family:'Nunito',sans-serif; font-size:12px; font-weight:600; color:var(--ink2); cursor:pointer; transition:all .12s; }
+.clpill:hover { background:var(--ink); color:#fff; border-color:var(--ink); }
+.clrow { display:flex; gap:9px; align-items:center; padding:7px 0; border-bottom:1px solid var(--line); font-size:12px; color:var(--ink2); }
+.clrow:last-child { border-bottom:none; }
+.clrow input[type=checkbox] { accent-color:var(--hospi); width:14px; height:14px; cursor:pointer; }
+
+/* FORMS */
+.fg { margin-bottom:14px; }
+.fl { display:block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:var(--ink3); margin-bottom:5px; }
+.fi,.fs,.ft { width:100%; background:var(--bg); border:1px solid var(--line); border-radius:var(--r); padding:8px 11px; font-family:'Nunito',sans-serif; font-size:13px; color:var(--ink); outline:none; transition:border-color .12s; }
+.fi:focus,.fs:focus,.ft:focus { border-color:var(--ink3); background:var(--white); }
+.ft { resize:vertical; min-height:75px; }
+.frow { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+/* ADD OVERLAYS */
+#add-ov,#todo-ov { position:fixed; inset:0; background:rgba(30,28,26,.35); backdrop-filter:blur(3px); z-index:200; display:none; align-items:center; justify-content:center; padding:20px; }
+#add-ov.open,#todo-ov.open { display:flex; }
+#todo-ov { z-index:300; }
+
+/* AGENDA */
+.rgrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; margin-bottom:20px; }
+.rcard { background:var(--white); border:1px solid var(--line); border-radius:var(--r); overflow:hidden; }
+.rch { padding:9px 13px; font-size:12px; font-weight:700; display:flex; align-items:center; gap:8px; border-bottom:1px solid var(--line); }
+.rcb { padding:8px 10px; }
+.rcslot { padding:5px 9px; border-radius:7px; margin-bottom:4px; font-size:12px; font-weight:600; cursor:pointer; transition:filter .12s; }
+.rcslot:hover { filter:brightness(.94); }
+.rcempty { font-size:11px; color:var(--ink3); text-align:center; padding:10px; }
+.sgrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:8px; }
+.scard { background:var(--white); border:1px solid var(--line); border-radius:var(--r); padding:13px 12px; text-align:center; cursor:pointer; transition:border-color .12s; }
+.scard:hover { border-color:var(--ink3); }
+.sav { width:38px; height:38px; border-radius:50%; margin:0 auto 7px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px; }
+.sname { font-size:12px; font-weight:700; }
+.srole { font-size:10px; color:var(--ink3); margin-top:1px; }
+.sct { display:inline-block; margin-top:5px; font-size:10px; font-weight:700; background:var(--bloc-bg); color:var(--bloc); padding:2px 7px; border-radius:10px; }
+
+/* NOTIF */
+.notif { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--ink); color:#fff; padding:9px 18px; border-radius:20px; font-size:12px; font-weight:700; z-index:999; animation:nIn .25s ease; }
+@keyframes nIn { from{opacity:0;transform:translateX(-50%) translateY(8px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+</style>
+</head>
+<body>
+<div id="app">
+
+<aside id="sidebar">
+  <div class="logo">
+    <div class="logo-name">MedRéunion</div>
+    <div class="logo-date" id="ldate"></div>
+  </div>
+  <nav class="nav">
+    <div class="nav-group">
+      <div class="nav-item on" id="ni-overview" onclick="go('overview')">
+        <div class="npip" style="background:var(--ink)"></div>
+        <div class="ndot" style="background:var(--ink)"></div>
+        Réunion du jour
+      </div>
+      <div class="nav-item" id="ni-agenda" onclick="go('agenda')">
+        <div class="npip" style="background:var(--ink)"></div>
+        <div class="ndot" style="background:var(--ink)"></div>
+        Agenda &amp; Staff
+      </div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-label">Hospitalisés</div>
+      <div class="nav-item" id="ni-salle1" onclick="go('salle1')"><div class="npip" style="background:var(--hospi)"></div><div class="ndot" style="background:var(--hospi)"></div>Salle 1<span class="nct" id="nc-salle1"></span></div>
+      <div class="nav-item" id="ni-salle2" onclick="go('salle2')"><div class="npip" style="background:var(--hospi)"></div><div class="ndot" style="background:var(--hospi)"></div>Salle 2<span class="nct" id="nc-salle2"></span></div>
+      <div class="nav-item" id="ni-salle3" onclick="go('salle3')"><div class="npip" style="background:var(--hospi)"></div><div class="ndot" style="background:var(--hospi)"></div>Salle 3<span class="nct" id="nc-salle3"></span></div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-label">Bloc</div>
+      <div class="nav-item" id="ni-bloc1" onclick="go('bloc1')"><div class="npip" style="background:var(--bloc)"></div><div class="ndot" style="background:var(--bloc)"></div>Bloc 1<span class="nct" id="nc-bloc1"></span></div>
+      <div class="nav-item" id="ni-bloc2" onclick="go('bloc2')"><div class="npip" style="background:var(--bloc)"></div><div class="ndot" style="background:var(--bloc)"></div>Bloc 2<span class="nct" id="nc-bloc2"></span></div>
+      <div class="nav-item" id="ni-bloc3" onclick="go('bloc3')"><div class="npip" style="background:var(--bloc)"></div><div class="ndot" style="background:var(--bloc)"></div>Bloc 3<span class="nct" id="nc-bloc3"></span></div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-label">Consultations</div>
+      <div class="nav-item" id="ni-consultation1" onclick="go('consultation1')"><div class="npip" style="background:var(--consult)"></div><div class="ndot" style="background:var(--consult)"></div>Consultation 1<span class="nct" id="nc-consultation1"></span></div>
+      <div class="nav-item" id="ni-consultation2" onclick="go('consultation2')"><div class="npip" style="background:var(--consult)"></div><div class="ndot" style="background:var(--consult)"></div>Consultation 2<span class="nct" id="nc-consultation2"></span></div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-label">Urgences</div>
+      <div class="nav-item" id="ni-urgences" onclick="go('urgences')"><div class="npip" style="background:var(--urg)"></div><div class="ndot" style="background:var(--urg)"></div>Urgences<span class="nct" id="nc-urgences"></span></div>
+    </div>
+  </nav>
+  <div class="sfoot">
+    <button class="btn btn-d" style="flex:1" onclick="openAdd()">+ Patient</button>
+    <button class="btn" onclick="doExport()" title="Exporter">&#8595;</button>
+  </div>
+</aside>
+
+<div id="main">
+  <div id="topbar">
+    <div class="tb-title" id="tbtitle">Réunion du jour</div>
+    <div class="srch"><span style="color:var(--ink3);font-size:13px">&#9906;</span><input placeholder="Rechercher..." oninput="doSearch(this.value)"></div>
+    <button class="btn btn-d" onclick="openAdd()">+ Patient</button>
+  </div>
+  <div id="content">
+    <div class="page on" id="p-overview">
+      <div class="ph"><div><div class="ph-t">Réunion du jour</div><div class="ph-s" id="ovdate"></div></div><button class="btn btn-d" onclick="notif('Réunion démarrée !')">&#9654; Démarrer</button></div>
+      <div class="stats" id="ovstats"></div>
+      <div class="slbl">Alertes &amp; points à discuter</div>
+      <div id="ovalerts"></div>
+      <div class="slbl">To-dos du jour</div>
+      <div id="ovtoday"></div>
+      <div class="slbl">To-dos autres</div>
+      <div id="ovother"></div>
+    </div>
+    <div class="page" id="p-salle1"><div id="r-salle1"></div></div>
+    <div class="page" id="p-salle2"><div id="r-salle2"></div></div>
+    <div class="page" id="p-salle3"><div id="r-salle3"></div></div>
+    <div class="page" id="p-bloc1"><div id="r-bloc1"></div></div>
+    <div class="page" id="p-bloc2"><div id="r-bloc2"></div></div>
+    <div class="page" id="p-bloc3"><div id="r-bloc3"></div></div>
+    <div class="page" id="p-consultation1"><div id="r-consultation1"></div></div>
+    <div class="page" id="p-consultation2"><div id="r-consultation2"></div></div>
+    <div class="page" id="p-urgences"><div id="r-urgences"></div></div>
+    <div class="page" id="p-agenda"><div class="ph"><div class="ph-t">Agenda &amp; Staff</div></div><div id="agbody"></div></div>
+  </div>
+</div>
+
+<aside id="tpanel">
+  <div class="tph"><div class="tph-t">To-dos</div><button class="btn" style="padding:4px 10px;font-size:11px" onclick="openTodoMdl(null)">+ Ajouter</button></div>
+  <div class="tpf">
+    <button class="tfb on" id="tf-all" onclick="setF('all')">Tous</button>
+    <button class="tfb" id="tf-today" onclick="setF('today')">Auj.</button>
+    <button class="tfb" id="tf-other" onclick="setF('other')">Autres</button>
+  </div>
+  <div class="tpl" id="tplist"></div>
+</aside>
+</div>
+
+<!-- PATIENT MODAL -->
+<div id="overlay" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mh">
+      <div class="mhav" id="mav"></div>
+      <div><div class="mhname" id="mname"></div><div class="mhmeta" id="mmeta"></div></div>
+      <div class="mhrt" id="mhrt"><div class="mclose" onclick="document.getElementById('overlay').classList.remove('open')">&#x2715;</div></div>
+    </div>
+    <div class="mtabs" id="mtabs">
+      <div class="mtab on" onclick="tab('resume')">Résumé</div>
+      <div class="mtab" onclick="tab('anam')">Anamnèse</div>
+      <div class="mtab" onclick="tab('clin')">Clinique</div>
+      <div class="mtab" onclick="tab('exam')">Examens</div>
+      <div class="mtab" onclick="tab('plan')">Plan</div>
+      <div class="mtab" onclick="tab('todos')">To-dos</div>
+    </div>
+    <div class="mbody" id="mbody"></div>
+  </div>
+</div>
+
+<!-- ADD PATIENT -->
+<div id="add-ov" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="max-width:500px" onclick="event.stopPropagation()">
+    <div class="mh"><div style="flex:1;font-family:'Lora',serif;font-weight:600;font-size:17px">Nouveau patient</div><div class="mclose" onclick="document.getElementById('add-ov').classList.remove('open')">&#x2715;</div></div>
+    <div class="mbody">
+      <div class="frow"><div class="fg"><label class="fl">Prénom</label><input class="fi" id="afn"></div><div class="fg"><label class="fl">Nom</label><input class="fi" id="aln"></div></div>
+      <div class="frow"><div class="fg"><label class="fl">Âge</label><input class="fi" id="aage" type="number"></div><div class="fg"><label class="fl">Sexe</label><select class="fs" id="asex"><option value="F">Féminin</option><option value="M">Masculin</option></select></div></div>
+      <div class="fg"><label class="fl">Localisation</label><select class="fs" id="aloc"><option value="salle1">Salle 1</option><option value="salle2">Salle 2</option><option value="salle3">Salle 3</option><option value="bloc1">Bloc 1</option><option value="bloc2">Bloc 2</option><option value="bloc3">Bloc 3</option><option value="consultation1">Consultation 1</option><option value="consultation2">Consultation 2</option><option value="urgences">Urgences</option></select></div>
+      <div class="fg"><label class="fl">Diagnostic (CIM)</label><input class="fi" id="adiag" placeholder="M16.1 – Coxarthrose"></div>
+      <div class="fg"><label class="fl">Thérapie / Intervention</label><input class="fi" id="ather" placeholder="PTH droite planifiée"></div>
+      <div class="fg"><label class="fl">Statut</label><select class="fs" id="astat"><option value="stable">Stable</option><option value="watch">À surveiller</option><option value="urgent">Urgent</option></select></div>
+      <div class="fg"><label class="fl">Anamnèse initiale</label><textarea class="ft" id="aanam" placeholder="Motif, antécédents..."></textarea></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
+        <button class="btn" onclick="document.getElementById('add-ov').classList.remove('open')">Annuler</button>
+        <button class="btn btn-d" onclick="savePt()">Ajouter</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD TODO -->
+<div id="todo-ov" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="max-width:420px" onclick="event.stopPropagation()">
+    <div class="mh"><div style="flex:1;font-family:'Lora',serif;font-weight:600;font-size:17px">Nouveau to-do</div><div class="mclose" onclick="document.getElementById('todo-ov').classList.remove('open')">&#x2715;</div></div>
+    <div class="mbody">
+      <div class="fg"><label class="fl">Tâche</label><input class="fi" id="tdtxt" placeholder="Décrire la tâche..."></div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Type</label><select class="fs" id="tdtype"><option value="today">Aujourd'hui</option><option value="other">Autre</option></select></div>
+        <div class="fg"><label class="fl">Priorité</label><select class="fs" id="tdprio"><option value="normal">Normale</option><option value="urgent">Urgente</option></select></div>
+      </div>
+      <div class="fg"><label class="fl">Assigner à</label><select class="fs" id="tdwho"><option value="">— Non assigné —</option></select></div>
+      <div class="fg" id="tdptwr" style="display:none"><label class="fl">Patient lié</label><input class="fi" id="tdptlbl" disabled></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
+        <button class="btn" onclick="document.getElementById('todo-ov').classList.remove('open')">Annuler</button>
+        <button class="btn btn-d" onclick="saveTodo()">Ajouter</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var LOC={
+  salle1:{l:'Salle 1',c:'var(--hospi)',bg:'var(--hospi-bg)',cls:'hospi'},
+  salle2:{l:'Salle 2',c:'var(--hospi)',bg:'var(--hospi-bg)',cls:'hospi'},
+  salle3:{l:'Salle 3',c:'var(--hospi)',bg:'var(--hospi-bg)',cls:'hospi'},
+  bloc1:{l:'Bloc 1',c:'var(--bloc)',bg:'var(--bloc-bg)',cls:'bloc'},
+  bloc2:{l:'Bloc 2',c:'var(--bloc)',bg:'var(--bloc-bg)',cls:'bloc'},
+  bloc3:{l:'Bloc 3',c:'var(--bloc)',bg:'var(--bloc-bg)',cls:'bloc'},
+  consultation1:{l:'Consultation 1',c:'var(--consult)',bg:'var(--consult-bg)',cls:'consult'},
+  consultation2:{l:'Consultation 2',c:'var(--consult)',bg:'var(--consult-bg)',cls:'consult'},
+  urgences:{l:'Urgences',c:'var(--urg)',bg:'var(--urg-bg)',cls:'urg'}
+};
+
+var CL={
+  "Pre-op hanche":["Bilan bio (NFS, coag, iono, CRP)","ECG","Consultation anesthesie","Rx bassin de face","Consultation cardio si necessaire","Arret anticoagulants","Consentement signe","Groupe sanguin + RAI","Bain antiseptique la veille","Jeune preoperatoire","Antibioprophylaxie","Check-list securite chirurgicale"],
+  "Pre-op genou":["Bilan biologique complet","ECG","Consultation anesthesie","Rx genou F+P + schuss","Consentement signe","Groupe sanguin + RAI","Arret anticoagulants","Jeune preoperatoire","Prophylaxie TVP"],
+  "Bilan cardio":["ECG 12 derivations","Echocardiographie transthoracique","Consultation cardiologue","NT-proBNP / BNP","Holter si arythmie","Epreuve d'effort si indiquee","Optimisation traitement HTA / IC"],
+  "Pre-anesthesie":["NFS + plaquettes","Coagulation (TP, TCA)","Ionogramme sanguin","Creatinine + DFG","Groupe sanguin + RAI","ECG","Allergies documentees","Liste medicaments","Consultation anesthesiste validee"],
+  "Bilan infectieux":["Hemocultures x2 avant ATB","NFS + CRP + PCT","ECBU","Rx thorax","Prelevements locaux si foyer","Serologies si indiquees"],
+  "Sortie hopital":["Ordonnances redigees","Lettre de sortie signee","Anticoagulation organisee","RDV de suivi planifie","Kine programmee","Patient informe des signes d'alarme","Transport organise","Transmission soins a domicile"]
+};
+
+var AVCLR=['#8fb4c8','#7a9e87','#c8a870','#e8a598','#a89ec8','#c8b870','#7ab4b4'];
+function avclr(s){var h=0;for(var i=0;i<s.length;i++)h+=s.charCodeAt(i);return AVCLR[h%AVCLR.length];}
+function ini(n){return n.split(' ').map(function(w){return w[0];}).join('').substring(0,2).toUpperCase();}
+function ds(){return new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});}
+function uid(){return 'id'+Date.now()+Math.random().toString(36).slice(2,7);}
+
+var S={patients:[],todos:[],staff:[
+  {id:'s1',name:'Dr. Martin',role:'Senior',c:'#4ea8de'},
+  {id:'s2',name:'Dr. Chen',role:'Medecin',c:'#9b72cf'},
+  {id:'s3',name:'Inf. Dubois',role:'Infirmier(e)',c:'#56cba3'},
+  {id:'s4',name:'Inf. Petit',role:'Infirmier(e)',c:'#5ba4a4'},
+  {id:'s5',name:'Dr. Bernard',role:'Resident',c:'#f4a261'},
+  {id:'s6',name:'Secr. Lopez',role:'Secretaire',c:'#e8a838'}
+],filter:'all',curPt:null,curTab:'resume',todoCtx:null};
+
+function demo(){
+  S.patients=[
+    {id:'p1',fn:'Marie',ln:'Lambert',age:72,sex:'F',loc:'salle1',diag:'M16.1 – Coxarthrose',ther:'PTH droite J3',stat:'watch',
+     anam:[{d:'22/03/25',t:'Patiente 72 ans, HTA equilibree. Douleurs hanche droite EVA 8/10 depuis 2 ans. Coxarthrose stade 4.'}],
+     clin:[{d:'26/03/25',t:'Afebrile. PA 138/82. EVA 4. Levee au fauteuil. Drain retire. Plaie propre.'}],
+     exam:[{d:'25/03/25',t:'NFS J1: Hb 9.8 g/dl. CRP 42. Rx hanche: implant en bonne position.'}],
+     plan:[{d:'26/03/25',t:'Kine mobilisation quotidienne. Controle NFS J3. HBPM prophylactique. Sortie prevue J5.'}],
+     sum:'J3 post PTH droite. Recuperation en cours. Anemie post-op a surveiller (Hb 9.8). Sortie prevue J5.',
+     disc:['Resultat NFS J3 (anemie)','Transfusion si Hb < 8 ?','Organisation sortie + kine ambulatoire']},
+    {id:'p2',fn:'Pierre',ln:'Morel',age:58,sex:'M',loc:'salle2',diag:'S72.0 – Fracture col femoral',ther:'ORIF prevu',stat:'urgent',
+     anam:[{d:'27/03/25',t:'Chute de hauteur. Douleur hanche gauche intense. Diabete T2 sous metformine.'}],
+     clin:[{d:'27/03/25',t:'MI gauche raccourci en rotation externe. EVA 9/10. Pas de deficit neurovasculaire.'}],
+     exam:[{d:'27/03/25',t:'Rx: fracture col femoral Garden IV. NFS normale. Gly 8.2 mmol/l. ECG: RS.'}],
+     plan:[{d:'27/03/25',t:'Operer en urgence differee ce matin. Arret metformine. Anesthesie contactee.'}],
+     sum:'Fracture col femoral Garden IV a operer ce matin. Diabete T2 a gerer en peri-op. Consentement a recueillir.',
+     disc:['Horaire bloc 1','Adaptation glycemie peri-op','Consentement a signer']},
+    {id:'p3',fn:'Sophie',ln:'Renard',age:45,sex:'F',loc:'bloc1',diag:'M17.1 – Gonarthrose mediale',ther:'PTG gauche',stat:'stable',
+     anam:[{d:'15/03/25',t:'Gonarthrose mediale gauche evoluee, varus 8 deg. Echec conservateur. Indication PTG retenue.'}],
+     clin:[{d:'27/03/25',t:'En salle de preparation. TA 128/74. A jeun. Checklist pre-op complete.'}],
+     exam:[{d:'26/03/25',t:'Bilan pre-op complet normal. Echo cardio: FE 65%. Consultation anesthesie validee.'}],
+     plan:[{d:'27/03/25',t:'Bloc 09h. PTG gauche. HBPM demarree ce soir.'}],
+     sum:'Patiente prete pour PTG gauche ce matin. Bilan complet valide.',
+     disc:['RAS – patiente prete pour le bloc']},
+    {id:'p4',fn:'Ahmed',ln:'Bensalem',age:33,sex:'M',loc:'urgences',diag:'M75.1 – Rupture coiffe',ther:'A definir',stat:'watch',
+     anam:[{d:'27/03/25',t:'Accident de travail il y a 3 jours. Douleur epaule droite, impotence fonctionnelle.'}],
+     clin:[{d:'27/03/25',t:'Abduction active douloureuse. Jobe positif. Force C5-C6 conservee.'}],
+     exam:[{d:'27/03/25',t:'Rx: pas de fracture. Echo: rupture partielle supra-epineux 7mm. IRM non realisee.'}],
+     plan:[],sum:'Rupture partielle coiffe droite post-traumatique. IRM a programmer. Decision therapeutique en attente.',
+     disc:['IRM epaule a programmer','Conservateur vs arthroscopie ?','Arret de travail']},
+    {id:'p5',fn:'Isabelle',ln:'Fontaine',age:61,sex:'F',loc:'consultation1',diag:'M48.0 – Stenose L4-L5',ther:'Suivi post-op 3 mois',stat:'stable',
+     anam:[{d:'10/01/25',t:'Operee laminectomie L4-L5. Claudication neurogene initiale 100m amelioree post-op.'}],
+     clin:[],exam:[],
+     plan:[{d:'27/03/25',t:'Consultation de suivi 3 mois. IRM lombaire de controle a demander.'}],
+     sum:'Suivi 3 mois post-laminectomie L4-L5. IRM de controle a planifier.',
+     disc:['Resultat clinique a 3 mois','IRM de controle']}
+  ];
+  S.todos=[
+    {id:'t1',txt:'Controle NFS Lambert (anemie post-op)',type:'today',prio:'urgent',pid:'p1',who:'s3',done:false},
+    {id:'t2',txt:'Consentement Morel avant bloc',type:'today',prio:'urgent',pid:'p2',who:'s1',done:false},
+    {id:'t3',txt:'Appeler cardiologue – accord peri-op Morel',type:'today',prio:'normal',pid:'p2',who:'s1',done:false},
+    {id:'t4',txt:'Lettre de sortie Lambert (J5)',type:'other',prio:'normal',pid:'p1',who:'s2',done:false},
+    {id:'t5',txt:'Demander IRM epaule Bensalem',type:'today',prio:'normal',pid:'p4',who:'s5',done:false},
+    {id:'t6',txt:'Programmer kine post-op Renard',type:'other',prio:'normal',pid:'p3',who:'s6',done:false}
+  ];
+}
+
+function render(){updateBadges();renderOverview();renderRooms();renderTodosPanel();renderAgenda();}
+
+function updateBadges(){
+  Object.keys(LOC).forEach(function(k){
+    var el=document.getElementById('nc-'+k);
+    if(el){var n=S.patients.filter(function(p){return p.loc===k;}).length;el.textContent=n||'';}
+  });
+}
+
+function missing(p){
+  var m=[];
+  if(!p.anam||!p.anam.length)m.push('Anamnese');
+  if(!p.clin||!p.clin.length)m.push('Clinique');
+  if(!p.exam||!p.exam.length)m.push('Examens');
+  if(!p.plan||!p.plan.length)m.push('Plan');
+  if(!p.sum)m.push('Resume');
+  return m;
+}
+
+function renderOverview(){
+  var total=S.patients.length;
+  var urgent=S.patients.filter(function(p){return p.stat==='urgent';}).length;
+  var hospi=S.patients.filter(function(p){return ['salle1','salle2','salle3'].indexOf(p.loc)>=0;}).length;
+  var bloc=S.patients.filter(function(p){return ['bloc1','bloc2','bloc3'].indexOf(p.loc)>=0;}).length;
+  var tdToday=S.todos.filter(function(t){return t.type==='today'&&!t.done;}).length;
+  document.getElementById('ovstats').innerHTML=
+    '<div class="stat"><div class="stat-n" style="color:var(--hospi)">'+total+'</div><div class="stat-l">Patients</div></div>'+
+    '<div class="stat"><div class="stat-n" style="color:var(--hospi)">'+hospi+'</div><div class="stat-l">Hospitalises</div></div>'+
+    '<div class="stat"><div class="stat-n" style="color:var(--bloc)">'+bloc+'</div><div class="stat-l">Bloc</div></div>'+
+    '<div class="stat"><div class="stat-n" style="color:var(--urg)">'+urgent+'</div><div class="stat-l">Urgents</div></div>'+
+    '<div class="stat"><div class="stat-n" style="color:var(--consult)">'+tdToday+'</div><div class="stat-l">To-dos auj.</div></div>';
+
+  var alerts='';
+  S.patients.forEach(function(p){
+    var m=missing(p),d=p.disc||[];
+    if(!m.length&&!d.length)return;
+    var info=LOC[p.loc];
+    alerts+='<div class="acard'+(m.length?'':' disc')+'" onclick="openPt(\''+p.id+'\')">'+
+      '<div class="acdot" style="background:'+(m.length?'var(--urg)':'var(--bloc)')+'"></div>'+
+      '<div class="acb"><div class="acn">'+p.fn+' '+p.ln+' <span class="chip ch-'+info.cls+'">'+info.l+'</span> <span class="chip ch-'+p.stat+'">'+(p.stat==='urgent'?'Urgent':p.stat==='watch'?'Surveiller':'Stable')+'</span></div>'+
+      (m.length?'<div class="aci" style="color:var(--urg)">Manquant : '+m.join(' · ')+'</div>':'')+
+      (d.length?'<div class="aci" style="color:var(--bloc)">'+d.map(function(x){return '-> '+x;}).join(' &nbsp;·&nbsp; ')+'</div>':'')+
+      '</div></div>';
+  });
+  document.getElementById('ovalerts').innerHTML=alerts||'<div style="color:var(--ink3);font-size:12px;padding:6px 0">Aucune alerte.</div>';
+
+  function tdRows(items){
+    if(!items.length)return '<div style="color:var(--ink3);font-size:12px;padding:6px 0">Aucun to-do.</div>';
+    return items.map(function(t){
+      var p=t.pid?S.patients.find(function(x){return x.id===t.pid;}):null;
+      var s=t.who?S.staff.find(function(x){return x.id===t.who;}):null;
+      return '<div class="tdrow'+(t.done?' done':'')+'">'+
+        '<div class="tck'+(t.done?' on':'')+'" onclick="toggleTodo(\''+t.id+'\',event)"></div>'+
+        '<div style="flex:1;font-size:12px;font-weight:500;'+(t.done?'text-decoration:line-through':'')+'">'+t.txt+'</div>'+
+        (t.prio==='urgent'?'<span class="chip ch-urgent">Urgent</span>':'')+
+        (p?'<span class="chip ch-hospi">'+p.fn+' '+p.ln[0]+'.</span>':'')+
+        (s?'<span class="chip ch-person">'+s.name+'</span>':'')+
+        '</div>';
+    }).join('');
+  }
+  document.getElementById('ovtoday').innerHTML=tdRows(S.todos.filter(function(t){return t.type==='today';}));
+  document.getElementById('ovother').innerHTML=tdRows(S.todos.filter(function(t){return t.type==='other';}));
+}
+
+function renderRooms(){
+  Object.keys(LOC).forEach(function(k){
+    var el=document.getElementById('r-'+k);
+    if(!el)return;
+    var info=LOC[k];
+    var pts=S.patients.filter(function(p){return p.loc===k;});
+    el.innerHTML='<div class="ph"><div><div class="ph-t">'+info.l+'</div><div class="ph-s">'+pts.length+' patient(s)</div></div><button class="btn btn-d" onclick="openAddAt(\''+k+'\')">+ Patient</button></div>'+
+      (pts.length===0?'<div style="text-align:center;padding:60px 0;color:var(--ink3)">Aucun patient.</div>':'')+
+      pts.map(function(p){return ptCard(p);}).join('');
+  });
+}
+
+function keyDates(p){
+  // collect dated entries across all fields, labelled, pick the most relevant ones
+  var dates=[];
+  function pick(entries,label){
+    if(entries&&entries.length){dates.push({d:entries[0].d,l:label});}
+  }
+  pick(p.anam,'Adm.');
+  pick(p.exam,'Labo/Radio');
+  pick(p.clin,'Clinique');
+  if(p.plan&&p.plan.length){
+    // look for sortie keyword
+    var sortie=p.plan.filter(function(e){return /sort|J[0-9]/.test(e.t);});
+    if(sortie.length) dates.push({d:sortie[0].d,l:'Plan'});
+    else dates.push({d:p.plan[0].d,l:'Plan'});
+  }
+  // deduplicate by date string, keep max 3
+  var seen={};
+  return dates.filter(function(x){if(seen[x.d])return false;seen[x.d]=1;return true;}).slice(0,3);
+}
+
+function ptCard(p){
+  var m=missing(p);
+  var col=avclr(p.fn+p.ln);
+  var tdCt=S.todos.filter(function(t){return t.pid===p.id&&!t.done;}).length;
+  var dates=keyDates(p);
+  return '<div class="ptcard" onclick="openPt(\''+p.id+'\')">'+
+    '<div class="ptav" style="background:'+col+'22;border:1px solid '+col+'44;color:'+col+'">'+ini(p.fn+' '+p.ln)+'</div>'+
+    '<div class="pti">'+
+      '<div class="ptn">'+p.fn+' '+p.ln+' <span style="font-family:\'DM Mono\',monospace;font-size:10px;color:var(--ink3);font-weight:400">'+p.age+'a</span></div>'+
+      '<div class="ptm" style="margin-top:3px;display:flex;gap:4px;flex-wrap:wrap;">'+
+        '<span class="chip ch-diag">'+p.diag+'</span>'+
+        '<span class="chip ch-ther">'+p.ther+'</span>'+
+      '</div>'+
+      (dates.length?
+        '<div style="margin-top:5px;display:flex;gap:6px;flex-wrap:wrap;">'+
+          dates.map(function(x){return '<span style="font-family:\'DM Mono\',monospace;font-size:9px;color:var(--ink3)"><span style="color:var(--ink2)">'+x.l+'</span> '+x.d+'</span>';}).join('')+
+        '</div>':'')+'</div>'+
+    '<div class="ptrt">'+
+      '<span class="chip ch-'+p.stat+'">'+(p.stat==='urgent'?'Urgent':p.stat==='watch'?'Surv.':'OK')+'</span>'+
+      (m.length?'<span class="chip ch-urgent">'+m.length+' manq.</span>':'')+
+      (tdCt?'<span class="chip ch-today">'+tdCt+' &#10003;</span>':'')+
+    '</div></div>';
+}
+
+function renderTodosPanel(){
+  var items=S.todos;
+  if(S.filter==='today')items=items.filter(function(t){return t.type==='today';});
+  if(S.filter==='other')items=items.filter(function(t){return t.type==='other';});
+  document.getElementById('tplist').innerHTML=items.map(function(t){
+    var p=t.pid?S.patients.find(function(x){return x.id===t.pid;}):null;
+    var s=t.who?S.staff.find(function(x){return x.id===t.who;}):null;
+    return '<div class="tcard'+(t.done?' done':'')+'">'+
+      '<div class="tcr"><div class="tck'+(t.done?' on':'')+'" onclick="toggleTodo(\''+t.id+'\',event)"></div><div class="tct'+(t.done?' done':'')+'">'+t.txt+'</div></div>'+
+      '<div class="tctags">'+
+        '<span class="chip ch-'+(t.type==='today'?'today':'other')+'">'+(t.type==='today'?'Auj.':'Autre')+'</span>'+
+        (t.prio==='urgent'?'<span class="chip ch-urgent">Urgent</span>':'')+
+        (p?'<span class="chip ch-hospi">'+p.fn+' '+p.ln[0]+'.</span>':'')+
+      '</div>'+
+      '<div class="tcasgn"><select onchange="assignTd(\''+t.id+'\',this.value)">'+
+        '<option value="">— Assigner —</option>'+
+        S.staff.map(function(st){return '<option value="'+st.id+'"'+(t.who===st.id?' selected':'')+'>'+st.name+'</option>';}).join('')+
+      '</select></div></div>';
+  }).join('')||'<div style="color:var(--ink3);font-size:12px;text-align:center;padding:16px">Aucun to-do</div>';
+}
+
+function setF(f){
+  S.filter=f;
+  ['all','today','other'].forEach(function(x){document.getElementById('tf-'+x).classList.toggle('on',x===f);});
+  renderTodosPanel();
+}
+
+function toggleTodo(id,e){
+  e.stopPropagation();
+  var t=S.todos.find(function(x){return x.id===id;});
+  if(t){t.done=!t.done;render();if(S.curPt)tab(S.curTab);}
+}
+function assignTd(id,who){
+  var t=S.todos.find(function(x){return x.id===id;});
+  if(t){t.who=who;renderTodosPanel();renderOverview();}
+}
+
+// PATIENT MODAL
+function openPt(id){
+  S.curPt=id;S.curTab='resume';
+  var p=S.patients.find(function(x){return x.id===id;});
+  if(!p)return;
+  var col=avclr(p.fn+p.ln);
+  document.getElementById('mav').style.background=col+'22'; document.getElementById('mav').style.border='1px solid '+col+'44';
+  document.getElementById('mav').style.color=col; document.getElementById('mav').textContent=ini(p.fn+' '+p.ln);
+  document.getElementById('mname').textContent=p.fn+' '+p.ln;
+  document.getElementById('mmeta').innerHTML=
+    '<span>'+p.age+' ans · '+(p.sex==='M'?'Masculin':'Feminin')+'</span>'+
+    '<span>'+LOC[p.loc].l+'</span>'+
+    '<span class="chip ch-diag">'+p.diag+'</span>'+
+    '<span class="chip ch-ther">'+p.ther+'</span>';
+  document.getElementById('mhrt').innerHTML=
+    '<span class="chip ch-'+p.stat+'">'+(p.stat==='urgent'?'Urgent':p.stat==='watch'?'Surveiller':'Stable')+'</span>'+
+    '<div class="mclose" onclick="document.getElementById(\'overlay\').classList.remove(\'open\')">&#x2715;</div>';
+  document.querySelectorAll('.mtab').forEach(function(el,i){el.classList.toggle('on',i===0);});
+  tab('resume');
+  document.getElementById('overlay').classList.add('open');
+}
+
+function tab(name){
+  S.curTab=name;
+  var TABS=['resume','anam','clin','exam','plan','todos'];
+  document.querySelectorAll('.mtab').forEach(function(el,i){el.classList.toggle('on',TABS[i]===name);});
+  var p=S.patients.find(function(x){return x.id===S.curPt;});
+  if(!p)return;
+  var body=document.getElementById('mbody');
+  if(name==='resume')body.innerHTML=renderResume(p);
+  else if(name==='anam')body.innerHTML=renderEntries(p,'anam','Anamnese');
+  else if(name==='clin')body.innerHTML=renderEntries(p,'clin','Examen clinique');
+  else if(name==='exam')body.innerHTML=renderEntries(p,'exam','Examens complementaires');
+  else if(name==='plan')body.innerHTML=renderEntries(p,'plan','Plan de traitement');
+  else if(name==='todos')body.innerHTML=renderPtTodos(p);
+}
+
+function renderResume(p){
+  var m=missing(p);
+  return (m.length?'<div class="mbox"><div class="mlbl">Informations manquantes</div>'+m.map(function(x){return '<div class="mitem">'+x+'</div>';}).join('')+'</div>':'')+
+    '<div class="sumbox" onclick="editSum(\''+p.id+'\')">'+
+      '<div class="sumlbl">Resume du decours</div>'+
+      '<div class="sumtxt" id="sum-'+p.id+'">'+(p.sum||'<span style="color:var(--ink3)">Cliquer pour ajouter un resume...</span>')+'</div>'+
+    '</div>'+
+    '<div class="dbox"><div class="dlbl">Points a discuter</div>'+
+      (p.disc&&p.disc.length?p.disc.map(function(d){return '<div class="ditem">'+d+'</div>';}).join(''):'<div style="font-size:12px;color:var(--ink3)">Aucun point.</div>')+
+      '<div style="margin-top:8px"><button class="btn" style="font-size:11px;padding:4px 10px" onclick="addDisc(\''+p.id+'\')">+ Ajouter</button></div>'+
+    '</div>'+
+    '<div class="slbl">Apercu rapide</div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'+
+      '<div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--ink3);margin-bottom:5px">Derniere note clinique</div><div style="font-size:12px;color:var(--ink2);line-height:1.5">'+(p.clin&&p.clin.length?p.clin[p.clin.length-1].t.substring(0,140)+'...':'—')+'</div></div>'+
+      '<div><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--ink3);margin-bottom:5px">Dernier plan</div><div style="font-size:12px;color:var(--ink2);line-height:1.5">'+(p.plan&&p.plan.length?p.plan[p.plan.length-1].t.substring(0,140)+'...':'—')+'</div></div>'+
+    '</div>';
+}
+
+function renderEntries(p,field,label){
+  var items=p[field]||[];
+  return '<div class="slbl">'+label+'</div>'+
+    (items.length?items.map(function(e){return '<div class="entry"><div class="edate">'+e.d+'</div><div class="etxt">'+e.t+'</div></div>';}).join(''):'<div style="color:var(--ink3);font-size:12px;padding:8px 0">Aucune entree.</div>')+
+    '<div class="ae"><textarea class="aeinp" id="ae-'+field+'-'+p.id+'" placeholder="Nouvelle note — '+ds()+'..."></textarea><button class="btn btn-d" onclick="addEntry(\''+p.id+'\',\''+field+'\')">Ajouter</button></div>';
+}
+
+function renderPtTodos(p){
+  var items=S.todos.filter(function(t){return t.pid===p.id;});
+  return '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'+
+    '<div class="slbl" style="margin:0">To-dos du patient</div>'+
+    '<button class="btn btn-d" style="font-size:11px;padding:4px 12px" onclick="openTodoMdl(\''+p.id+'\')">+ Ajouter</button></div>'+
+    (items.length?items.map(function(t){
+      var s=t.who?S.staff.find(function(x){return x.id===t.who;}):null;
+      return '<div class="tdrow'+(t.done?' done':'')+'">'+
+        '<div class="tck'+(t.done?' on':'')+'" onclick="toggleTodo(\''+t.id+'\',event)"></div>'+
+        '<div style="flex:1;font-size:12px;font-weight:500;'+(t.done?'text-decoration:line-through':'')+'">'+t.txt+'</div>'+
+        '<span class="chip ch-'+(t.type==='today'?'today':'other')+'">'+(t.type==='today'?'Auj.':'Autre')+'</span>'+
+        (t.prio==='urgent'?'<span class="chip ch-urgent">Urgent</span>':'')+
+        (s?'<span class="chip ch-person">'+s.name+'</span>':'')+
+        '</div>';
+    }).join(''):'<div style="color:var(--ink3);font-size:12px;padding:8px 0">Aucun to-do.</div>')+
+    '<div class="slbl" style="margin-top:20px">Checklists automatiques</div>'+
+    '<div class="clpills">'+Object.keys(CL).map(function(k){return '<button class="clpill" onclick="showCL(\''+p.id+'\',\''+k+'\')">'+k+'</button>';}).join('')+'</div>'+
+    '<div id="clbody-'+p.id+'"></div>';
+}
+
+function showCL(pid,name){
+  var items=CL[name];
+  var el=document.getElementById('clbody-'+pid);
+  if(!el)return;
+  el.innerHTML='<div class="dbox" style="background:var(--hospi-bg);border-color:#c3dff0">'+
+    '<div class="dlbl" style="color:var(--hospi)">'+name+'</div>'+
+    items.map(function(it,i){return '<div class="clrow"><input type="checkbox" id="cl'+i+'" class="clcb"><label for="cl'+i+'">'+it+'</label></div>';}).join('')+
+    '<div style="margin-top:10px;display:flex;gap:7px">'+
+      '<button class="btn btn-d" style="font-size:11px" onclick="addCLTodos(\''+pid+'\',\''+name+'\')">Ajouter coches comme to-dos</button>'+
+      '<button class="btn" style="font-size:11px" onclick="document.getElementById(\'clbody-'+pid+'\').innerHTML=\'\'">Fermer</button>'+
+    '</div></div>';
+}
+
+function addCLTodos(pid,name){
+  var items=CL[name];
+  var cbs=document.querySelectorAll('.clcb');
+  var n=0;
+  cbs.forEach(function(cb,i){if(cb.checked&&items[i]){S.todos.push({id:uid(),txt:items[i],type:'today',prio:'normal',pid:pid,who:'',done:false});n++;}});
+  if(n){render();tab('todos');notif(n+' to-do(s) ajoute(s)');}
+}
+
+function addEntry(pid,field){
+  var el=document.getElementById('ae-'+field+'-'+pid);
+  if(!el||!el.value.trim())return;
+  var p=S.patients.find(function(x){return x.id===pid;});
+  if(!p)return;
+  if(!p[field])p[field]=[];
+  p[field].push({d:ds(),t:el.value.trim()});
+  render();tab(field);
+}
+
+function editSum(pid){
+  var p=S.patients.find(function(x){return x.id===pid;});
+  var el=document.getElementById('sum-'+pid);
+  if(!el)return;
+  el.innerHTML='<textarea class="aeinp" id="es-'+pid+'" style="min-height:60px;width:100%">'+(p.sum||'')+'</textarea>'+
+    '<div style="margin-top:6px;display:flex;gap:6px;justify-content:flex-end"><button class="btn btn-d" style="font-size:11px" onclick="saveSum(\''+pid+'\')">Enregistrer</button></div>';
+}
+function saveSum(pid){
+  var el=document.getElementById('es-'+pid);
+  if(!el)return;
+  var p=S.patients.find(function(x){return x.id===pid;});
+  if(p){p.sum=el.value.trim();render();tab('resume');}
+}
+function addDisc(pid){
+  var v=prompt('Point a discuter :');
+  if(!v)return;
+  var p=S.patients.find(function(x){return x.id===pid;});
+  if(p){if(!p.disc)p.disc=[];p.disc.push(v);render();tab('resume');}
+}
+
+// AGENDA
+function renderAgenda(){
+  var ag=document.getElementById('agbody');
+  if(!ag)return;
+  var sections=[
+    {label:'Hospitalises',locs:['salle1','salle2','salle3']},
+    {label:'Bloc operatoire',locs:['bloc1','bloc2','bloc3']},
+    {label:'Consultations',locs:['consultation1','consultation2']},
+    {label:'Urgences',locs:['urgences']}
+  ];
+  var h='';
+  sections.forEach(function(sec){
+    h+='<div class="slbl">'+sec.label+'</div><div class="rgrid">';
+    sec.locs.forEach(function(k){
+      var info=LOC[k];
+      var pts=S.patients.filter(function(p){return p.loc===k;});
+      h+='<div class="rcard"><div class="rch"><div class="ndot" style="background:'+info.c+'"></div>'+info.l+'</div><div class="rcb">'+
+        pts.map(function(p){return '<div class="rcslot" style="background:'+info.bg+';color:'+info.c+'" onclick="openPt(\''+p.id+'\')">'+p.fn+' '+p.ln+'</div>';}).join('')+
+        (pts.length===0?'<div class="rcempty">Vide</div>':'')+
+        '<button class="btn-add" onclick="openAddAt(\''+k+'\')">+ Patient</button>'+
+      '</div></div>';
+    });
+    h+='</div>';
+  });
+  h+='<div class="slbl">Personnel</div><div class="sgrid">'+
+    S.staff.map(function(s){
+      var ct=S.todos.filter(function(t){return t.who===s.id&&!t.done;}).length;
+      return '<div class="scard"><div class="sav" style="background:'+s.c+'33;color:'+s.c+'">'+ini(s.name)+'</div>'+
+        '<div class="sname">'+s.name+'</div><div class="srole">'+s.role+'</div>'+
+        (ct?'<div class="sct">'+ct+' to-do'+(ct>1?'s':'')+'</div>':'')+
+      '</div>';
+    }).join('')+
+    '<div class="scard" onclick="addStaff()" style="border-style:dashed"><div style="font-size:22px;margin-bottom:4px;opacity:.3">+</div><div class="srole">Ajouter</div></div>'+
+  '</div>';
+  ag.innerHTML=h;
+}
+
+// NAV
+function go(page){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('on');});
+  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('on');});
+  var p=document.getElementById('p-'+page);if(p)p.classList.add('on');
+  var n=document.getElementById('ni-'+page);if(n)n.classList.add('on');
+  var titles={overview:'Reunion du jour',agenda:'Agenda & Staff'};
+  document.getElementById('tbtitle').textContent=titles[page]||(LOC[page]?LOC[page].l:page);
+}
+
+// ADD PATIENT
+function openAdd(){document.getElementById('add-ov').classList.add('open');}
+function openAddAt(loc){document.getElementById('aloc').value=loc;openAdd();}
+function savePt(){
+  var fn=document.getElementById('afn').value.trim();
+  var ln=document.getElementById('aln').value.trim();
+  if(!fn||!ln){alert('Prenom et nom requis.');return;}
+  var loc=document.getElementById('aloc').value;
+  var anam=document.getElementById('aanam').value.trim();
+  S.patients.push({id:uid(),fn:fn,ln:ln,
+    age:parseInt(document.getElementById('aage').value)||0,
+    sex:document.getElementById('asex').value,
+    loc:loc,diag:document.getElementById('adiag').value.trim()||'—',
+    ther:document.getElementById('ather').value.trim()||'—',
+    stat:document.getElementById('astat').value,
+    anam:anam?[{d:ds(),t:anam}]:[],clin:[],exam:[],plan:[],sum:'',disc:[]
+  });
+  document.getElementById('add-ov').classList.remove('open');
+  ['afn','aln','aage','adiag','ather','aanam'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  render();go(loc);notif(fn+' '+ln+' ajoute(e)');
+}
+
+// ADD TODO
+var _tctx=null;
+function openTodoMdl(pid){
+  _tctx=pid;
+  var wr=document.getElementById('tdptwr'),lb=document.getElementById('tdptlbl');
+  if(pid){var p=S.patients.find(function(x){return x.id===pid;});wr.style.display='block';lb.value=p?p.fn+' '+p.ln:'';}
+  else wr.style.display='none';
+  document.getElementById('todo-ov').classList.add('open');
+}
+function saveTodo(){
+  var txt=document.getElementById('tdtxt').value.trim();
+  if(!txt)return;
+  S.todos.push({id:uid(),txt:txt,type:document.getElementById('tdtype').value,prio:document.getElementById('tdprio').value,pid:_tctx||null,who:document.getElementById('tdwho').value,done:false});
+  document.getElementById('todo-ov').classList.remove('open');
+  document.getElementById('tdtxt').value='';
+  render();
+  if(S.curPt&&_tctx===S.curPt)tab('todos');
+}
+
+function fillStaffSel(id){
+  var el=document.getElementById(id);if(!el)return;
+  el.innerHTML='<option value="">— Non assigne —</option>'+S.staff.map(function(s){return '<option value="'+s.id+'">'+s.name+'</option>';}).join('');
+}
+
+function doSearch(q){
+  if(!q.trim())return;
+  var r=S.patients.filter(function(p){return (p.fn+' '+p.ln+' '+p.diag).toLowerCase().indexOf(q.toLowerCase())>=0;});
+  if(r.length===1)openPt(r[0].id);
+}
+
+function addStaff(){
+  var name=prompt('Nom :');if(!name)return;
+  var role=prompt('Role :');if(!role)return;
+  S.staff.push({id:uid(),name:name,role:role,c:AVCLR[S.staff.length%AVCLR.length]});
+  fillStaffSel('tdwho');render();
+}
+
+function doExport(){
+  var d=new Date().toLocaleDateString('fr-FR');
+  var t='REUNION DE SERVICE — '+d+'\n'+Array(50).join('-')+'\n\n';
+  t+='PATIENTS ('+S.patients.length+')\n';
+  S.patients.forEach(function(p){t+='  · '+p.fn+' '+p.ln+' ('+LOC[p.loc].l+') — '+p.diag+'\n    '+(p.sum||'—')+'\n';});
+  t+='\nTO-DOS DU JOUR\n';
+  S.todos.filter(function(t2){return t2.type==='today';}).forEach(function(td){var s=td.who?S.staff.find(function(x){return x.id===td.who;}):null;t+='  ['+(td.done?'v':' ')+'] '+td.txt+(s?' -> '+s.name:'')+'\n';});
+  t+='\nTO-DOS AUTRES\n';
+  S.todos.filter(function(t2){return t2.type==='other';}).forEach(function(td){var s=td.who?S.staff.find(function(x){return x.id===td.who;}):null;t+='  ['+(td.done?'v':' ')+'] '+td.txt+(s?' -> '+s.name:'')+'\n';});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([t],{type:'text/plain'}));
+  a.download='reunion-'+d.replace(/\//g,'-')+'.txt';a.click();
+}
+
+function notif(msg){
+  var el=document.createElement('div');el.className='notif';el.textContent=msg;
+  document.body.appendChild(el);setTimeout(function(){el.remove();},2200);
+}
+
+// INIT
+document.getElementById('ldate').textContent=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+document.getElementById('ovdate').textContent=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+demo();
+render();
+fillStaffSel('tdwho');
+</script>
+</body>
+</html>

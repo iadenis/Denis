@@ -189,9 +189,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
     <a href="sources_bibliotheques.html" class="cat-row">
       <span class="cat-icon">📚</span><span class="cat-name">bibliothèques</span><span class="cat-arrow">›</span>
     </a>
-    <a href="clinique.html" class="cat-row">
+    <div class="cat-row" onclick="showOutils()">
       <span class="cat-icon">🔧</span><span class="cat-name">outils</span><span class="cat-arrow">›</span>
-    </a>
+    </div>
   </div>
 
   <!-- Animation atome — au-dessus du menu, révélée avec lui -->
@@ -509,6 +509,108 @@ function moveRobot(dx,dy,ok){
 function sparks(){
   const c=['#7a9e87','#e8a598','#8fb4c8','#c8a870','#a89ec8'];
   for(let i=0;i<6;i++){const p=document.createElement('div');p.className='pt';p.style.cssText=`width:6px;height:6px;left:${Math.random()*100}vw;top:${Math.random()*60+20}vh;background:${c[i%c.length]};animation-delay:${Math.random()*0.3}s`;document.body.appendChild(p);setTimeout(()=>p.remove(),1200);}
+}
+</script>
+
+<!-- ══ OUTILS SCREEN ══ -->
+<div class="screen" id="s-outils" style="padding:0;">
+  <div class="topbar">
+    <button class="back-btn" onclick="goHome()">← denis</button>
+    <span class="topbar-sep">/</span>
+    <span class="topbar-title">outils</span>
+  </div>
+  <div class="games-list">
+
+    <a href="pico.html" class="game-card">
+      <div class="game-dot" style="background:#1a4a2e"></div>
+      <div class="game-info">
+        <div class="game-name">PICO · aide au traitement</div>
+        <div class="game-desc">PubMed · Cochrane · HAS</div>
+      </div>
+      <div class="game-badge ext">↗ ouvrir</div>
+    </a>
+
+    <a href="diagnostic_medical.html" class="game-card">
+      <div class="game-dot" style="background:#1a3a5c"></div>
+      <div class="game-info">
+        <div class="game-name">aide au diagnostic</div>
+        <div class="game-desc">Harrison · UpToDate · EBM</div>
+      </div>
+      <div class="game-badge ext">↗ ouvrir</div>
+    </a>
+
+    <a href="denis_cbip.html" class="game-card">
+      <div class="game-dot" style="background:#e8a598"></div>
+      <div class="game-info">
+        <div class="game-name">CBIP · pharmacologie</div>
+        <div class="game-desc">cbip.be · 2026 · EBM</div>
+      </div>
+      <div class="game-badge ext">↗ ouvrir</div>
+    </a>
+
+    <div class="game-card" onclick="openTool('reunion')" style="cursor:pointer;">
+      <div class="game-dot" style="background:#8fb4c8"></div>
+      <div class="game-info">
+        <div class="game-name">MedRéunion</div>
+        <div class="game-desc">réunion de service · patients · to-dos · agenda</div>
+      </div>
+      <div class="game-badge ext">↗ ouvrir</div>
+    </div>
+
+    <div class="game-card" onclick="openTool('medizin')" style="cursor:pointer;">
+      <div class="game-dot" style="background:#2d5a8e"></div>
+      <div class="game-info">
+        <div class="game-name">MedLingua · Deutsch C1</div>
+        <div class="game-desc">allemand médical · dossier clinique · assistant IA</div>
+      </div>
+      <div class="game-badge ext">↗ ouvrir</div>
+    </div>
+
+    <div style="border:1px solid var(--line);border-radius:12px;padding:0.9rem 1.1rem;background:var(--bg2);">
+      <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px;">// à venir</div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;">
+        <span style="font-family:'DM Mono',monospace;font-size:10px;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--ink3);">anatomie</span>
+        <span style="font-family:'DM Mono',monospace;font-size:10px;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--ink3);">physiologie</span>
+        <span style="font-family:'DM Mono',monospace;font-size:10px;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--ink3);">ECNI · EDN</span>
+        <span style="font-family:'DM Mono',monospace;font-size:10px;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--ink3);">PACES · PASS</span>
+        <span style="font-family:'DM Mono',monospace;font-size:10px;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--ink3);">sémiologie</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ OUTIL IFRAME ══ -->
+<div class="screen" id="s-tool" style="flex-direction:column;">
+  <div class="topbar" style="flex-shrink:0;">
+    <button class="back-btn" onclick="closeTool()">← outils</button>
+    <span class="topbar-sep">/</span>
+    <span class="topbar-title" id="tool-title"></span>
+  </div>
+  <iframe id="tool-frame" src="" style="flex:1;border:none;width:100%;display:block;min-height:0;" allowfullscreen></iframe>
+</div>
+
+<script>
+/* ══ OUTILS ══ */
+const TOOL_SRCS = {
+  reunion: 'reunion-service.html',
+  medizin: 'medizin-deutsch-c1.html',
+};
+const TOOL_LABELS = {
+  reunion: 'MedRéunion',
+  medizin: 'MedLingua · Deutsch C1',
+};
+function showOutils() {
+  show('s-outils');
+}
+function openTool(key) {
+  document.getElementById('tool-title').textContent = TOOL_LABELS[key];
+  document.getElementById('tool-frame').src = TOOL_SRCS[key];
+  show('s-tool');
+}
+function closeTool() {
+  document.getElementById('tool-frame').src = '';
+  show('s-outils');
 }
 </script>
 </body>
