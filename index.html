@@ -168,7 +168,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
 
 <!-- ACCUEIL -->
 <div class="screen active" id="s-home">
-  <div class="home-logo">denis · v0.4</div>
+  <div class="home-logo">denis · v0.5</div>
   <div class="home-title">denis</div>
   <div class="home-sub">apprendre n'importe quoi, progressivement.</div>
 
@@ -333,11 +333,22 @@ function startM0(){ startGame('m0'); }
 
 /* ══ DONNÉES ══ */
 const CAT_APPRENDRE_ROWS=[
-  {type:'link',name:'sciences · maths',icon:'⚗️',color:'#a89ec8',url:'sciences.html'},
-  {type:'sub', name:'langues · philosophie · littérature',icon:'📖',color:'#e8d498',sub:'lettres'},
-  {type:'sub', name:'informatique',icon:'💻',color:'#3a7a6a',sub:'info'},
+  {type:'sub', name:'🔬️ sciences · mathématiques',icon:'',color:'#a89ec8',sub:'sciences'},
+  {type:'sub', name:'📖 langues · philosophie · littérature',icon:'',color:'#e8d498',sub:'lettres'},
+  {type:'sub', name:'💻 informatique',icon:'',color:'#3a7a6a',sub:'info'},
 ];
 const SUBCATS={
+  sciences:[
+    {type:'sub', name:'chimie',icon:'⚗️',color:'#7a9e87',sub:'chimie'},
+    {name:'physique',desc:'mécanique · thermodynamique · optique',color:'#8fb4c8',soon:true},
+    {name:'mathématiques',desc:'algèbre · analyse · probabilités',color:'#a89ec8',soon:true},
+    {name:'biologie',desc:'cellule · génétique · évolution',color:'#c8a870',soon:true},
+  ],
+  chimie:[
+    {name:'chimie générale',desc:'atome · liaisons · thermo · équilibres · redox',color:'#7a9e87',url:'denis_chimie_28mars_v11.html',badge:'nouveau'},
+    {name:'chimie organique',desc:'hydrocarbures · fonctions · réactions',color:'#c8a870',soon:true},
+    {name:'biochimie',desc:'protéines · ADN · métabolisme · enzymes',color:'#e8a598',soon:true},
+  ],
   lettres:[
     {id:'francais',name:'français robot',desc:'grammaire · conjugaison · orthographe',color:'#e8a598',url:'denis_francais.html'},
     {id:'espagnol',name:'español robot',desc:'gramática · conjugación · ser/estar',color:'#e8d498',url:'denis_espagnol.html'},
@@ -415,11 +426,13 @@ function showCat(cat){
     CAT_APPRENDRE_ROWS.forEach(row=>{
       const card=document.createElement('div'); card.className='game-card';
       if(row.type==='link'){
-        card.innerHTML=`<div class="game-dot" style="background:${row.color}"></div><div class="game-info"><div class="game-name">${row.name}</div></div><div class="game-badge ext">↗ ouvrir</div>`;
+        const _badge=row.badge?`<div class="game-badge" style="border-color:rgba(122,158,135,0.4);color:var(--sage);background:rgba(122,158,135,0.08)">${row.badge}</div>`:`<div class="game-badge ext">↗ ouvrir</div>`;
+        const _desc=row.desc?`<div class="game-desc">${row.desc}</div>`:'';
+        card.innerHTML=`<div class="game-dot" style="background:${row.color}"></div><div class="game-info"><div class="game-name">${row.name}</div>${_desc}</div>${_badge}`;
         card.onclick=()=>window.location.href=row.url;
       } else {
-        card.innerHTML=`<div style="font-size:14px;width:22px;text-align:center;">${row.icon}</div><div class="game-info"><div class="game-name">${row.name}</div></div><div class="game-badge">›</div>`;
-        card.onclick=()=>showSubCat(row.sub,row.name);
+        card.innerHTML=`<div class="game-info"><div class="game-name">${row.name}</div></div><div class="game-badge">›</div>`;
+        card.onclick=()=>showSubCat(row.sub, row.name);
       }
       list.appendChild(card);
     });
@@ -427,15 +440,36 @@ function showCat(cat){
   }
 }
 
-function showSubCat(sub,label){
+function showSubCat(sub,label,parentSub){
   curCat=sub; document.getElementById('cat-title').textContent=label;
-  document.getElementById('cat-back-btn').onclick=()=>showCat('apprendre');
+  // back button: go to parent sub-cat or apprendre
+  if(parentSub){
+    document.getElementById('cat-back-btn').onclick=()=>showSubCat(parentSub, parentSub==='sciences'?'🔬️ sciences · mathématiques':parentSub);
+  } else {
+    document.getElementById('cat-back-btn').onclick=()=>showCat('apprendre');
+  }
   const list=document.getElementById('games-list'); list.innerHTML='';
   (SUBCATS[sub]||[]).forEach(g=>{
     const card=document.createElement('div'); card.className='game-card';
-    if(g.isGame){const gd=GAMES[g.id];if(!gd)return;card.innerHTML=`<div class="game-dot" style="background:${gd.color}"></div><div class="game-info"><div class="game-name">${gd.name}</div><div class="game-desc">${gd.desc}</div></div><div class="game-badge">${gd.questions.length} niveaux</div>`;card.onclick=()=>startGame(g.id);}
-    else if(g.soon){card.innerHTML=`<div class="game-dot" style="background:${g.color}"></div><div class="game-info"><div class="game-name">${g.name}</div><div class="game-desc">${g.desc}</div></div><div class="game-badge soon">bientôt</div>`;card.onclick=()=>showCS(g.name,'🔭');}
-    else{card.innerHTML=`<div class="game-dot" style="background:${g.color}"></div><div class="game-info"><div class="game-name">${g.name}</div><div class="game-desc">${g.desc}</div></div><div class="game-badge ext">↗ ouvrir</div>`;card.onclick=()=>window.location.href=g.url;}
+    if(g.type==='sub'){
+      // nested sub-category
+      card.innerHTML=`<div class="game-dot" style="background:${g.color}"></div><div class="game-info"><div class="game-name">${g.name}</div></div><div class="game-badge">›</div>`;
+      card.onclick=()=>showSubCat(g.sub, g.name, sub);
+    } else if(g.isGame){
+      const gd=GAMES[g.id];if(!gd)return;
+      card.innerHTML=`<div class="game-dot" style="background:${gd.color}"></div><div class="game-info"><div class="game-name">${gd.name}</div><div class="game-desc">${gd.desc}</div></div><div class="game-badge">${gd.questions.length} niveaux</div>`;
+      card.onclick=()=>startGame(g.id);
+    } else if(g.soon){
+      card.innerHTML=`<div class="game-dot" style="background:${g.color}"></div><div class="game-info"><div class="game-name">${g.name}</div><div class="game-desc">${g.desc}</div></div><div class="game-badge soon">bientôt</div>`;
+      card.onclick=()=>showCS(g.name,'🔭');
+    } else if(g.badge){
+      // link with coloured badge
+      card.innerHTML=`<div class="game-dot" style="background:${g.color}"></div><div class="game-info"><div class="game-name">${g.name}</div><div class="game-desc">${g.desc||''}</div></div><div class="game-badge" style="border-color:rgba(122,158,135,0.4);color:var(--sage);background:rgba(122,158,135,0.08)">${g.badge}</div>`;
+      card.onclick=()=>window.location.href=g.url;
+    } else {
+      card.innerHTML=`<div class="game-dot" style="background:${g.color}"></div><div class="game-info"><div class="game-name">${g.name}</div><div class="game-desc">${g.desc||''}</div></div><div class="game-badge ext">↗ ouvrir</div>`;
+      card.onclick=()=>window.location.href=g.url;
+    }
     list.appendChild(card);
   });
   show('s-cat');
