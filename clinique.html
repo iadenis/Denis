@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Denis · Outils</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#faf8f4;--bg2:#f0ebe2;
+  --ink:#1a1814;--ink2:#6b6760;--ink3:#b5b2ac;
+  --line:rgba(26,24,20,0.08);
+}
+html,body{min-height:100%;height:100%;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);}
+
+/* ── topbar ── */
+.topbar{display:flex;align-items:center;gap:10px;padding:0.65rem 1.5rem;border-bottom:1px solid var(--line);background:var(--bg);position:sticky;top:0;z-index:50;}
+.tback{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink3);text-decoration:none;transition:color 0.12s;}
+.tback:hover{color:var(--ink);}
+.tsep{color:var(--ink3);font-size:11px;}
+.ttitle{font-family:'DM Mono',monospace;font-size:12px;color:var(--ink);}
+
+/* ── list view ── */
+#view-list{display:flex;flex-direction:column;}
+.page{max-width:520px;margin:0 auto;padding:2.5rem 1.5rem 5rem;display:flex;flex-direction:column;gap:8px;}
+.tool-card{background:white;border:1px solid var(--line);border-radius:12px;padding:1rem 1.25rem;display:flex;align-items:center;gap:14px;text-decoration:none;color:inherit;transition:all 0.13s;cursor:pointer;}
+.tool-card *{text-decoration:none;}
+.tool-card:hover{border-color:var(--ink3);background:var(--bg2);}
+.tool-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.tool-info{flex:1;}
+.tool-name{font-family:'DM Mono',monospace;font-size:13px;color:var(--ink);}
+.tool-pills{display:flex;gap:3px;flex-wrap:wrap;margin-top:4px;}
+.tool-pill{font-family:'DM Mono',monospace;font-size:9px;padding:1px 6px;border-radius:999px;border:1px solid var(--line);color:var(--ink3);background:var(--bg);white-space:nowrap;}
+.tool-arrow{font-family:'DM Mono',monospace;font-size:13px;color:var(--ink3);flex-shrink:0;}
+.coming{border:1px solid var(--line);border-radius:12px;padding:0.9rem 1.1rem;background:var(--bg2);display:flex;flex-direction:column;gap:6px;}
+.coming-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink3);}
+.coming-list{display:flex;flex-wrap:wrap;gap:4px;}
+.coming-item{font-family:'DM Mono',monospace;font-size:10px;padding:2px 9px;border-radius:999px;border:1px solid var(--line);color:var(--ink3);}
+
+/* ── iframe view ── */
+#view-tool{display:none;flex-direction:column;height:100vh;position:fixed;inset:0;z-index:100;background:var(--bg);}
+#view-tool.open{display:flex;}
+#tool-topbar{display:flex;align-items:center;gap:10px;padding:0.65rem 1.5rem;border-bottom:1px solid var(--line);background:var(--bg);flex-shrink:0;}
+#tool-back{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink3);background:none;border:none;cursor:pointer;transition:color .12s;padding:0;}
+#tool-back:hover{color:var(--ink);}
+#tool-label{font-family:'DM Mono',monospace;font-size:12px;color:var(--ink);}
+#tool-iframe{flex:1;border:none;width:100%;display:block;min-height:0;}
+</style>
+</head>
+<body>
+
+<!-- LIST VIEW -->
+<div id="view-list">
+  <div class="topbar">
+    <a href="index.html" class="tback">← denis</a>
+    <span class="tsep">/</span>
+    <span class="ttitle">outils</span>
+  </div>
+  <div class="page">
+
+    <a href="pico.html" class="tool-card">
+      <div class="tool-dot" style="background:#1a4a2e"></div>
+      <div class="tool-info">
+        <div class="tool-name">PICO · aide au traitement</div>
+        <div class="tool-pills"><span class="tool-pill">PubMed</span><span class="tool-pill">Cochrane</span><span class="tool-pill">HAS</span></div>
+      </div>
+      <div class="tool-arrow">›</div>
+    </a>
+
+    <a href="diagnostic_medical.html" class="tool-card">
+      <div class="tool-dot" style="background:#1a3a5c"></div>
+      <div class="tool-info">
+        <div class="tool-name">aide au diagnostic</div>
+        <div class="tool-pills"><span class="tool-pill">Harrison</span><span class="tool-pill">UpToDate</span><span class="tool-pill">EBM</span></div>
+      </div>
+      <div class="tool-arrow">›</div>
+    </a>
+
+    <div class="tool-card" onclick="openTool('reunion-service.html','MedRéunion')">
+      <div class="tool-dot" style="background:#8fb4c8"></div>
+      <div class="tool-info">
+        <div class="tool-name">MedRéunion</div>
+        <div class="tool-pills"><span class="tool-pill">patients</span><span class="tool-pill">to-dos</span><span class="tool-pill">agenda</span></div>
+      </div>
+      <div class="tool-arrow">›</div>
+    </div>
+
+    <div class="tool-card" onclick="openTool('medizin-deutsch-c1.html','MedLingua · Deutsch C1')">
+      <div class="tool-dot" style="background:#2d5a8e"></div>
+      <div class="tool-info">
+        <div class="tool-name">MedLingua · Deutsch C1</div>
+        <div class="tool-pills"><span class="tool-pill">dossier clinique</span><span class="tool-pill">assistant IA</span><span class="tool-pill">DE</span></div>
+      </div>
+      <div class="tool-arrow">›</div>
+    </div>
+
+    <div class="tool-card" onclick="openTool('dissertation.html','Dissertation · rédaction')">
+      <div class="tool-dot" style="background:#6b4f8e"></div>
+      <div class="tool-info">
+        <div class="tool-name">Dissertation · rédaction</div>
+        <div class="tool-pills"><span class="tool-pill">idées</span><span class="tool-pill">ressources IA</span><span class="tool-pill">citations</span><span class="tool-pill">dossiers</span></div>
+      </div>
+      <div class="tool-arrow">›</div>
+    </div>
+
+    <div class="tool-card" onclick="openTool('budget.html','Budget · gestion mensuelle')">
+      <div class="tool-dot" style="background:#c8a870"></div>
+      <div class="tool-info">
+        <div class="tool-name">Budget · gestion mensuelle</div>
+        <div class="tool-pills"><span class="tool-pill">pochettes</span><span class="tool-pill">épargne</span><span class="tool-pill">projets</span></div>
+      </div>
+      <div class="tool-arrow">›</div>
+    </div>
+
+    <div class="coming">
+      <div class="coming-label">// à venir</div>
+      <div class="coming-list">
+        <span class="coming-item">anatomie</span>
+        <span class="coming-item">physiologie</span>
+        <span class="coming-item">ECNI · EDN</span>
+        <span class="coming-item">PACES · PASS</span>
+        <span class="coming-item">sémiologie</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TOOL IFRAME VIEW -->
+<div id="view-tool">
+  <div id="tool-topbar">
+    <button id="tool-back" onclick="closeTool()">← outils</button>
+    <span class="tsep">/</span>
+    <span id="tool-label"></span>
+  </div>
+  <iframe id="tool-iframe" src="" allowfullscreen></iframe>
+</div>
+
+<script>
+function openTool(src, label) {
+  document.getElementById('tool-label').textContent = label;
+  document.getElementById('tool-iframe').src = src;
+  document.getElementById('view-tool').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeTool() {
+  document.getElementById('tool-iframe').src = '';
+  document.getElementById('view-tool').classList.remove('open');
+  document.body.style.overflow = '';
+}
+</script>
+</body>
+</html>
