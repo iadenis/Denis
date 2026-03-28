@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dissertation · rédaction</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#faf8f4;--bg2:#f0ebe2;--bg3:#e8dfd0;
+  --ink:#1a1814;--ink2:#6b6760;--ink3:#b5b2ac;
+  --line:rgba(26,24,20,0.08);
+  --lav:#6b4f8e;--lav-bg:rgba(107,79,142,0.08);--lav-line:rgba(107,79,142,0.2);
+  --sage:#7a9e87;--sage-bg:rgba(122,158,135,0.08);
+  --amber:#c8a870;--amber-bg:rgba(200,168,112,0.08);
+  --blush:#e8a598;
+  --r:8px;--rl:12px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);font-size:13px;line-height:1.5;}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:2px;}
+
+#app{display:flex;height:100vh;}
+
+/* ── SIDEBAR ── */
+#sidebar{width:220px;background:var(--bg);border-right:1px solid var(--line);display:flex;flex-direction:column;flex-shrink:0;}
+.logo{padding:16px 18px 12px;border-bottom:1px solid var(--line);}
+.logo-name{font-family:'DM Mono',monospace;font-size:13px;letter-spacing:.05em;color:var(--ink);}
+.logo-sub{font-family:'DM Mono',monospace;font-size:9px;color:var(--ink3);letter-spacing:.1em;margin-top:2px;}
+
+.snav{flex:1;overflow-y:auto;padding:8px 0;}
+.snav-lbl{padding:8px 18px 3px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);}
+
+.para-item{display:flex;align-items:center;gap:9px;padding:6px 18px;cursor:pointer;position:relative;transition:opacity .12s;}
+.para-item:hover{opacity:.5;}
+.para-item.on{opacity:1;}
+.para-item.on .ppip{opacity:1;}
+.ppip{position:absolute;left:0;top:50%;transform:translateY(-50%);width:2px;height:14px;border-radius:0 2px 2px 0;opacity:0;background:var(--lav);}
+.pdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;background:var(--bg3);border:1px solid var(--line);}
+.para-item.on .pdot{background:var(--lav);border-color:var(--lav);}
+.para-name{font-family:'DM Mono',monospace;font-size:12px;color:var(--ink2);}
+.para-item.on .para-name{color:var(--ink);}
+.para-badge{font-family:'DM Mono',monospace;font-size:9px;color:var(--ink3);margin-left:auto;}
+
+.add-para-btn{margin:4px 12px 8px;display:flex;align-items:center;gap:6px;padding:6px 8px;border:1px dashed var(--line);border-radius:var(--r);background:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:11px;color:var(--ink3);width:calc(100% - 24px);transition:all .12s;}
+.add-para-btn:hover{border-color:var(--ink3);color:var(--ink2);}
+
+.divider{height:1px;background:var(--line);margin:4px 0;}
+
+.folder-item{display:flex;align-items:center;gap:8px;padding:6px 18px;cursor:pointer;transition:opacity .12s;}
+.folder-item:hover{opacity:.5;}
+.folder-item.on{opacity:1;}
+.folder-icon{font-size:11px;flex-shrink:0;}
+.folder-name{font-family:'DM Mono',monospace;font-size:12px;color:var(--ink2);}
+.folder-count{font-family:'DM Mono',monospace;font-size:9px;color:var(--ink3);margin-left:auto;}
+
+.add-folder-btn{margin:4px 12px 8px;display:flex;align-items:center;gap:6px;padding:6px 8px;border:1px dashed var(--line);border-radius:var(--r);background:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:11px;color:var(--ink3);width:calc(100% - 24px);transition:all .12s;}
+.add-folder-btn:hover{border-color:var(--ink3);color:var(--ink2);}
+
+/* ── MAIN ── */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+#topbar{height:44px;background:var(--bg);border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 18px;gap:10px;flex-shrink:0;}
+.tb-title{font-family:'DM Mono',monospace;font-size:12px;color:var(--ink);flex:1;}
+.tb-btn{font-family:'DM Mono',monospace;font-size:10px;padding:4px 12px;border-radius:999px;border:1px solid var(--line);background:none;color:var(--ink3);cursor:pointer;transition:all .12s;white-space:nowrap;}
+.tb-btn:hover{color:var(--ink2);border-color:var(--ink3);}
+.tb-btn.on{background:var(--lav);color:white;border-color:var(--lav);}
+
+/* ── VIEWS ── */
+#content{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.view{display:none;flex:1;overflow-y:auto;padding:18px 20px;}
+.view.show{display:flex;flex-direction:column;gap:14px;}
+
+/* ── IDEAS VIEW ── */
+.sec-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);display:flex;align-items:center;gap:8px;}
+.sec-label::after{content:'';flex:1;height:1px;background:var(--line);}
+
+.idea-input-wrap{display:flex;gap:8px;align-items:flex-start;}
+.idea-input-wrap textarea{flex:1;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink);resize:none;outline:none;min-height:56px;transition:border-color .12s;}
+.idea-input-wrap textarea:focus{border-color:var(--ink3);}
+.add-btn{font-family:'DM Mono',monospace;font-size:11px;padding:7px 14px;border-radius:var(--r);border:1px solid var(--line);background:none;color:var(--ink3);cursor:pointer;transition:all .12s;white-space:nowrap;align-self:flex-end;}
+.add-btn:hover{border-color:var(--ink2);color:var(--ink2);}
+
+.ideas-list{display:flex;flex-direction:column;gap:5px;}
+.idea-row{display:flex;align-items:flex-start;gap:8px;padding:7px 10px;background:var(--bg2);border-radius:var(--r);}
+.idea-num{font-family:'DM Mono',monospace;font-size:10px;color:var(--ink3);min-width:16px;margin-top:1px;}
+.idea-text{flex:1;font-size:13px;color:var(--ink);line-height:1.5;}
+.idea-del{background:none;border:none;cursor:pointer;font-size:13px;color:var(--ink3);padding:0;line-height:1;flex-shrink:0;transition:color .12s;}
+.idea-del:hover{color:var(--blush);}
+
+.info-note{background:var(--lav-bg);border:1px solid var(--lav-line);border-radius:var(--r);padding:8px 12px;font-family:'DM Mono',monospace;font-size:11px;color:var(--lav);line-height:1.6;}
+
+.search-btn-row{display:flex;justify-content:flex-end;}
+.search-btn{font-family:'DM Mono',monospace;font-size:11px;padding:8px 20px;border-radius:999px;background:var(--ink);color:var(--bg);border:none;cursor:pointer;transition:opacity .12s;}
+.search-btn:hover{opacity:.75;}
+
+/* ── RESOURCES VIEW ── */
+.res-status{font-family:'DM Mono',monospace;font-size:10px;color:var(--ink3);}
+.loading-row{display:flex;align-items:center;gap:8px;padding:16px 0;}
+.ldots{display:flex;gap:3px;}
+.ldots span{width:5px;height:5px;border-radius:50%;background:var(--lav);animation:lpulse 1.2s infinite;}
+.ldots span:nth-child(2){animation-delay:.2s;}
+.ldots span:nth-child(3){animation-delay:.4s;}
+@keyframes lpulse{0%,80%,100%{opacity:.15}40%{opacity:1}}
+
+.res-card{background:white;border:1px solid var(--line);border-radius:var(--rl);overflow:hidden;}
+.res-head{padding:12px 14px 8px;}
+.res-type-row{display:flex;align-items:center;gap:6px;margin-bottom:5px;}
+.res-type{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:999px;}
+.res-type.livre{background:var(--lav-bg);color:var(--lav);border:1px solid var(--lav-line);}
+.res-type.article{background:var(--sage-bg);color:var(--sage);border:1px solid rgba(122,158,135,0.2);}
+.res-type.chapitre{background:var(--amber-bg);color:var(--amber);border:1px solid rgba(200,168,112,0.2);}
+.res-title{font-family:'DM Mono',monospace;font-size:13px;color:var(--ink);line-height:1.4;margin-bottom:3px;}
+.res-author{font-size:11px;color:var(--ink3);}
+
+.res-body{padding:0 14px 12px;display:flex;flex-direction:column;gap:10px;}
+.res-section{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:4px;}
+.res-summary{font-size:12px;color:var(--ink2);line-height:1.65;}
+.res-quote{border-left:2px solid var(--lav);padding:6px 10px;background:var(--lav-bg);border-radius:0 var(--r) var(--r) 0;font-size:12px;font-style:italic;color:var(--ink);line-height:1.65;}
+.res-critique{font-size:12px;color:var(--ink2);line-height:1.6;}
+.res-critique strong{color:var(--ink);font-weight:500;font-style:normal;}
+
+.res-foot{border-top:1px solid var(--line);padding:8px 14px;display:flex;align-items:center;gap:8px;}
+.res-url{font-family:'DM Mono',monospace;font-size:10px;color:var(--lav);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.7;}
+.res-actions{display:flex;gap:5px;flex-shrink:0;}
+.res-btn{font-family:'DM Mono',monospace;font-size:10px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:none;color:var(--ink3);cursor:pointer;transition:all .12s;white-space:nowrap;}
+.res-btn:hover{border-color:var(--ink2);color:var(--ink2);}
+.res-btn.prim{background:var(--lav);color:white;border-color:var(--lav);}
+.res-btn.prim:hover{opacity:.8;}
+
+/* ── FOLDERS VIEW ── */
+.folder-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;}
+.folder-card{background:white;border:1px solid var(--line);border-radius:var(--rl);padding:14px;cursor:pointer;transition:all .13s;}
+.folder-card:hover{border-color:var(--ink3);}
+.folder-card-icon{font-size:22px;margin-bottom:8px;}
+.folder-card-name{font-family:'DM Mono',monospace;font-size:12px;color:var(--ink);margin-bottom:3px;}
+.folder-card-meta{font-family:'DM Mono',monospace;font-size:10px;color:var(--ink3);}
+
+/* ── FOLDER OPEN VIEW ── */
+.view-header{display:flex;align-items:center;gap:10px;}
+.view-back{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink3);background:none;border:none;cursor:pointer;padding:0;transition:color .12s;}
+.view-back:hover{color:var(--ink);}
+.view-htitle{font-family:'DM Mono',monospace;font-size:13px;color:var(--ink);flex:1;}
+.view-hdel{font-family:'DM Mono',monospace;font-size:10px;color:var(--blush);background:none;border:none;cursor:pointer;padding:0;transition:opacity .12s;}
+.view-hdel:hover{opacity:.6;}
+
+/* ── MAPPING VIEW ── */
+.map-row{background:white;border:1px solid var(--line);border-radius:var(--rl);overflow:hidden;}
+.map-head{display:flex;align-items:center;gap:8px;padding:9px 14px;background:var(--bg2);}
+.map-para-sym{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink3);}
+.map-para-name{font-family:'DM Mono',monospace;font-size:12px;color:var(--ink);flex:1;}
+.map-select{font-family:'DM Mono',monospace;font-size:10px;padding:4px 8px;border:1px solid var(--line);border-radius:999px;background:var(--bg);color:var(--ink2);cursor:pointer;outline:none;}
+.map-body{padding:8px 14px;display:flex;flex-wrap:wrap;gap:5px;min-height:36px;align-items:center;}
+.map-chip{display:flex;align-items:center;gap:4px;font-family:'DM Mono',monospace;font-size:10px;padding:3px 8px;border-radius:999px;background:var(--lav-bg);color:var(--lav);border:1px solid var(--lav-line);}
+.map-chip button{background:none;border:none;cursor:pointer;color:var(--lav);font-size:11px;padding:0;line-height:1;transition:opacity .12s;}
+.map-chip button:hover{opacity:.5;}
+.map-empty{font-family:'DM Mono',monospace;font-size:10px;color:var(--ink3);font-style:italic;}
+
+/* ── MODAL ── */
+.modal-bg{position:fixed;inset:0;background:rgba(26,24,20,0.3);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px;}
+.modal{background:var(--bg);border:1px solid var(--line);border-radius:var(--rl);padding:18px 20px;width:100%;max-width:380px;}
+.modal-title{font-family:'DM Mono',monospace;font-size:13px;color:var(--ink);margin-bottom:12px;}
+.modal input,.modal select{width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);padding:7px 10px;font-family:'DM Mono',monospace;font-size:12px;color:var(--ink);outline:none;margin-bottom:12px;transition:border-color .12s;}
+.modal input:focus,.modal select:focus{border-color:var(--ink3);}
+.modal-btns{display:flex;gap:6px;justify-content:flex-end;}
+.mbtn{font-family:'DM Mono',monospace;font-size:11px;padding:6px 14px;border-radius:999px;border:1px solid var(--line);background:none;color:var(--ink3);cursor:pointer;transition:all .12s;}
+.mbtn:hover{color:var(--ink2);}
+.mbtn.prim{background:var(--ink);color:var(--bg);border-color:var(--ink);}
+.mbtn.prim:hover{opacity:.75;}
+
+.empty-state{text-align:center;padding:32px 20px;color:var(--ink3);}
+.empty-state p{font-family:'DM Mono',monospace;font-size:12px;margin-bottom:5px;}
+.empty-state small{font-size:11px;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div class="logo">
+      <div class="logo-name">dissertation</div>
+      <div class="logo-sub">rédaction · ressources</div>
+    </div>
+    <div class="snav">
+      <div class="snav-lbl">paragraphes</div>
+      <div id="para-list"></div>
+      <button class="add-para-btn" onclick="showModal('para')">+ paragraphe</button>
+      <div class="divider"></div>
+      <div class="snav-lbl" style="margin-top:6px">dossiers</div>
+      <div id="folder-list-side"></div>
+      <button class="add-folder-btn" onclick="showModal('folder')">+ dossier</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div id="main">
+    <div id="topbar">
+      <span class="tb-title" id="tb-title">Paragraphe 1</span>
+      <button class="tb-btn" id="btn-ideas" onclick="switchView('ideas')">idées</button>
+      <button class="tb-btn" id="btn-res" onclick="switchView('resources')">ressources</button>
+      <button class="tb-btn" id="btn-folders" onclick="switchView('folders')">dossiers</button>
+      <button class="tb-btn" id="btn-map" onclick="switchView('mapping')">attribution</button>
+    </div>
+
+    <div id="content">
+
+      <!-- IDEAS -->
+      <div class="view" id="view-ideas">
+        <div class="info-note">Entrez les idées clés de ce paragraphe — l'IA proposera des ressources académiques avec citations et critique.</div>
+        <div>
+          <div class="sec-label" style="margin-bottom:8px">idées</div>
+          <div class="idea-input-wrap">
+            <textarea id="idea-input" placeholder="Ex : Le rôle de l'inconscient dans la création artistique..." rows="2"></textarea>
+            <button class="add-btn" onclick="addIdea()">ajouter</button>
+          </div>
+          <div class="ideas-list" id="ideas-list" style="margin-top:8px"></div>
+        </div>
+        <div class="search-btn-row">
+          <button class="search-btn" onclick="launchResearch()">rechercher des ressources →</button>
+        </div>
+      </div>
+
+      <!-- RESOURCES -->
+      <div class="view" id="view-resources">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="res-status" id="res-status">aucune recherche lancée</span>
+          <button class="tb-btn" style="margin-left:auto" onclick="launchResearch()">relancer ↗</button>
+        </div>
+        <div id="resources-container">
+          <div class="empty-state"><p>aucune ressource</p><small>Ajoutez des idées et lancez la recherche</small></div>
+        </div>
+      </div>
+
+      <!-- FOLDERS LIST -->
+      <div class="view" id="view-folders">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="sec-label" style="margin:0;flex:1">mes dossiers</span>
+          <button class="tb-btn" onclick="showModal('folder')">+ nouveau</button>
+        </div>
+        <div class="folder-grid" id="folders-grid"></div>
+      </div>
+
+      <!-- FOLDER OPEN -->
+      <div class="view" id="view-folder-open">
+        <div class="view-header">
+          <button class="view-back" onclick="switchView('folders')">← dossiers</button>
+          <span class="view-htitle" id="folder-open-title"></span>
+          <button class="view-hdel" onclick="deleteFolder()">supprimer</button>
+        </div>
+        <div id="folder-open-body"></div>
+      </div>
+
+      <!-- MAPPING -->
+      <div class="view" id="view-mapping">
+        <div class="sec-label">attribution des ressources aux paragraphes</div>
+        <div id="mapping-container"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-bg" id="modal-para" style="display:none" onclick="if(event.target===this)closeModal('para')">
+  <div class="modal">
+    <div class="modal-title">nouveau paragraphe</div>
+    <input id="mpara-input" placeholder="Ex : Introduction, Développement I..." />
+    <div class="modal-btns">
+      <button class="mbtn" onclick="closeModal('para')">annuler</button>
+      <button class="mbtn prim" onclick="confirmPara()">créer</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-folder" style="display:none" onclick="if(event.target===this)closeModal('folder')">
+  <div class="modal">
+    <div class="modal-title">nouveau dossier</div>
+    <input id="mfolder-input" placeholder="Ex : Sources philosophie, Articles neurologie..." />
+    <div class="modal-btns">
+      <button class="mbtn" onclick="closeModal('folder')">annuler</button>
+      <button class="mbtn prim" onclick="confirmFolder()">créer</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal-save" style="display:none" onclick="if(event.target===this)closeModal('save')">
+  <div class="modal">
+    <div class="modal-title">enregistrer dans un dossier</div>
+    <div id="msave-resname" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink3);margin-bottom:10px;line-height:1.5;"></div>
+    <select id="msave-select"></select>
+    <div class="modal-btns">
+      <button class="mbtn" onclick="closeModal('save')">annuler</button>
+      <button class="mbtn prim" onclick="confirmSave()">enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let S = {
+  paragraphs: [
+    {id:1,title:'Introduction',ideas:[]},
+    {id:2,title:'Développement I',ideas:[]},
+    {id:3,title:'Développement II',ideas:[]},
+    {id:4,title:'Conclusion',ideas:[]}
+  ],
+  activePara: 1,
+  folders: [{id:1,name:'Références clés',resources:[]}],
+  openFolder: null,
+  view: 'ideas',
+  lastResources: [],
+  assignments: {},
+  pendingSave: null
+};
+
+const $ = id => document.getElementById(id);
+
+function gp(){ return S.paragraphs.find(p=>p.id===S.activePara); }
+function nextId(arr){ return arr.length ? Math.max(...arr.map(x=>x.id))+1 : 1; }
+
+function render(){
+  renderParaList();
+  renderFolderSide();
+  $('tb-title').textContent = gp()?.title || '';
+  if(S.view==='ideas') renderIdeas();
+  if(S.view==='resources') {}
+  if(S.view==='folders') renderFoldersGrid();
+  if(S.view==='folder-open') renderFolderOpen();
+  if(S.view==='mapping') renderMapping();
+}
+
+function renderParaList(){
+  $('para-list').innerHTML = S.paragraphs.map(p => {
+    const asgn = (S.assignments[p.id]||[]).length;
+    const on = p.id===S.activePara ? 'on' : '';
+    return `<div class="para-item ${on}" onclick="selectPara(${p.id})">
+      <div class="ppip"></div>
+      <div class="pdot"></div>
+      <span class="para-name">${p.title}</span>
+      ${asgn ? `<span class="para-badge">${asgn}</span>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function renderFolderSide(){
+  $('folder-list-side').innerHTML = S.folders.map(f => `
+    <div class="folder-item ${f.id===S.openFolder&&S.view==='folder-open'?'on':''}" onclick="openFolder(${f.id})">
+      <span class="folder-icon">▫</span>
+      <span class="folder-name">${f.name}</span>
+      <span class="folder-count">${f.resources.length}</span>
+    </div>`).join('');
+}
+
+function renderIdeas(){
+  const p = gp(); if(!p) return;
+  const el = $('ideas-list');
+  if(!p.ideas.length){
+    el.innerHTML = '<div style="font-family:\'DM Mono\',monospace;font-size:11px;color:var(--ink3);padding:4px 2px;font-style:italic;">aucune idée</div>';
+    return;
+  }
+  el.innerHTML = p.ideas.map((idea,i)=>`
+    <div class="idea-row">
+      <span class="idea-num">${i+1}.</span>
+      <span class="idea-text">${idea}</span>
+      <button class="idea-del" onclick="removeIdea(${i})">×</button>
+    </div>`).join('');
+}
+
+function renderFoldersGrid(){
+  const el = $('folders-grid');
+  if(!S.folders.length){el.innerHTML='<div class="empty-state"><p>aucun dossier</p><small>Créez des dossiers pour organiser vos ressources</small></div>';return;}
+  el.innerHTML = S.folders.map(f=>`
+    <div class="folder-card" onclick="openFolder(${f.id})">
+      <div class="folder-card-icon">▫</div>
+      <div class="folder-card-name">${f.name}</div>
+      <div class="folder-card-meta">${f.resources.length} ressource${f.resources.length!==1?'s':''}</div>
+    </div>`).join('');
+}
+
+function renderFolderOpen(){
+  const f = S.folders.find(x=>x.id===S.openFolder); if(!f) return;
+  $('folder-open-title').textContent = f.name;
+  const el = $('folder-open-body');
+  if(!f.resources.length){el.innerHTML='<div class="empty-state"><p>dossier vide</p><small>Enregistrez des ressources depuis la vue Recherche</small></div>';return;}
+  el.innerHTML = f.resources.map(r=>resCard(r,true)).join('');
+}
+
+function renderMapping(){
+  const allRes = [];
+  S.folders.forEach(f=>f.resources.forEach(r=>allRes.push({...r,_fid:f.id})));
+  $('mapping-container').innerHTML = S.paragraphs.map(p=>{
+    const asgn = S.assignments[p.id]||[];
+    const opts = allRes.filter(r=>!asgn.includes(r.id));
+    return `<div class="map-row" style="margin-bottom:8px">
+      <div class="map-head">
+        <span class="map-para-sym">§</span>
+        <span class="map-para-name">${p.title}</span>
+        <select class="map-select" onchange="assignRes(${p.id},this.value);this.value=''">
+          <option value="">+ attribuer</option>
+          ${opts.map(r=>`<option value="${r.id}">${r.title.substring(0,38)}…</option>`).join('')}
+        </select>
+      </div>
+      <div class="map-body">
+        ${asgn.length ? asgn.map(rid=>{
+          const r=allRes.find(x=>x.id===rid);
+          return r?`<div class="map-chip"><span>${r.title.substring(0,28)}…</span><button onclick="unassignRes(${p.id},'${rid}')">×</button></div>`:'';
+        }).join('') : '<span class="map-empty">aucune ressource attribuée</span>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function resCard(r, inFolder=false){
+  const typeClass = r.type==='Livre'?'livre':r.type==='Article'?'article':'chapitre';
+  return `<div class="res-card" style="margin-bottom:12px">
+    <div class="res-head">
+      <div class="res-type-row"><span class="res-type ${typeClass}">${r.type}</span></div>
+      <div class="res-title">${r.title}</div>
+      <div class="res-author">${r.author} · ${r.year}</div>
+    </div>
+    <div class="res-body">
+      <div><div class="res-section">résumé</div><div class="res-summary">${r.summary}</div></div>
+      <div><div class="res-section">citation</div><div class="res-quote">${r.citation}</div></div>
+      <div><div class="res-section">apports & limites</div><div class="res-critique">${r.critique}</div></div>
+    </div>
+    <div class="res-foot">
+      <span class="res-url">${r.url}</span>
+      <div class="res-actions">
+        ${!inFolder
+          ? `<button class="res-btn" onclick="openSaveModal('${r.id}')">enregistrer</button>`
+          : `<button class="res-btn" onclick="removeFromFolder('${r.id}')">retirer</button>`}
+        <button class="res-btn prim" onclick="quickAssign('${r.id}')">attribuer §</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ── ACTIONS ── */
+function switchView(v){
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('show'));
+  document.querySelectorAll('.tb-btn').forEach(b=>b.classList.remove('on'));
+  S.view = v;
+  const map = {ideas:'view-ideas',resources:'view-resources',folders:'view-folders','folder-open':'view-folder-open',mapping:'view-mapping'};
+  const el = $(map[v]); if(el) el.classList.add('show');
+  const btnMap = {ideas:'btn-ideas',resources:'btn-res',folders:'btn-folders','folder-open':'btn-folders',mapping:'btn-map'};
+  const btn = $(btnMap[v]); if(btn) btn.classList.add('on');
+  render();
+}
+
+function selectPara(id){
+  S.activePara = id;
+  render();
+  switchView('ideas');
+}
+
+function addIdea(){
+  const inp = $('idea-input');
+  const v = inp.value.trim(); if(!v) return;
+  gp().ideas.push(v);
+  inp.value = '';
+  renderIdeas();
+  renderParaList();
+}
+
+function removeIdea(i){ gp().ideas.splice(i,1); renderIdeas(); renderParaList(); }
+
+function showModal(type){
+  $(`modal-${type}`).style.display='flex';
+  setTimeout(()=>($(`m${type}-input`)||$('mpara-input')).focus(),60);
+}
+function closeModal(type){ $(`modal-${type}`).style.display='none'; }
+
+function confirmPara(){
+  const t = $('mpara-input').value.trim(); if(!t) return;
+  const p={id:nextId(S.paragraphs),title:t,ideas:[]};
+  S.paragraphs.push(p); S.activePara=p.id;
+  closeModal('para'); $('mpara-input').value='';
+  render(); switchView('ideas');
+}
+
+function confirmFolder(){
+  const n = $('mfolder-input').value.trim(); if(!n) return;
+  S.folders.push({id:nextId(S.folders),name:n,resources:[]});
+  closeModal('folder'); $('mfolder-input').value='';
+  render();
+}
+
+function openFolder(id){
+  S.openFolder = id; render(); switchView('folder-open');
+}
+
+function deleteFolder(){
+  S.folders = S.folders.filter(f=>f.id!==S.openFolder);
+  S.openFolder = null; render(); switchView('folders');
+}
+
+function removeFromFolder(rid){
+  const f = S.folders.find(x=>x.id===S.openFolder);
+  if(f) f.resources = f.resources.filter(r=>r.id!==rid);
+  renderFolderOpen(); renderFolderSide();
+}
+
+function openSaveModal(rid){
+  S.pendingSave = rid;
+  const r = S.lastResources.find(x=>x.id===rid);
+  $('msave-resname').textContent = r?.title || rid;
+  $('msave-select').innerHTML = S.folders.map(f=>`<option value="${f.id}">${f.name}</option>`).join('');
+  $('modal-save').style.display='flex';
+}
+
+function confirmSave(){
+  const fid = parseInt($('msave-select').value);
+  const f = S.folders.find(x=>x.id===fid);
+  const r = S.lastResources.find(x=>x.id===S.pendingSave);
+  if(f && r && !f.resources.find(x=>x.id===r.id)) f.resources.push(r);
+  closeModal('save'); render();
+}
+
+function assignRes(pid, rid){
+  if(!rid) return;
+  if(!S.assignments[pid]) S.assignments[pid]=[];
+  if(!S.assignments[pid].includes(rid)) S.assignments[pid].push(rid);
+  renderMapping(); renderParaList();
+}
+
+function unassignRes(pid, rid){
+  if(S.assignments[pid]) S.assignments[pid]=S.assignments[pid].filter(r=>r!==rid);
+  renderMapping(); renderParaList();
+}
+
+function quickAssign(rid){
+  const pid = S.activePara;
+  if(!S.assignments[pid]) S.assignments[pid]=[];
+  if(!S.assignments[pid].includes(rid)) S.assignments[pid].push(rid);
+  renderParaList();
+  const p = gp();
+  const banner = document.createElement('div');
+  banner.style.cssText='position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);font-family:\'DM Mono\',monospace;font-size:11px;padding:8px 16px;border-radius:999px;z-index:300;';
+  banner.textContent = `attribué à « ${p?.title} »`;
+  document.body.appendChild(banner);
+  setTimeout(()=>banner.remove(), 2000);
+}
+
+/* ── RESEARCH ── */
+async function launchResearch(){
+  const p = gp();
+  if(!p.ideas.length){ alert('Ajoutez au moins une idée avant de lancer la recherche.'); return; }
+  switchView('resources');
+  $('res-status').textContent = 'recherche en cours…';
+  $('resources-container').innerHTML = `<div class="loading-row"><div class="ldots"><span></span><span></span><span></span></div><span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink3)">recherche de ressources académiques…</span></div>`;
+
+  const prompt = `Tu es un assistant de recherche académique. Pour le paragraphe « ${p.title} » avec les idées : ${p.ideas.map((x,i)=>`${i+1}. ${x}`).join(' ; ')}, propose 3 ressources académiques pertinentes (livres, articles, chapitres).
+
+Réponds UNIQUEMENT avec un tableau JSON valide, sans backticks ni texte autour :
+[
+  {
+    "id": "r1",
+    "type": "Livre",
+    "title": "Titre complet de l'ouvrage",
+    "author": "Nom, Prénom",
+    "year": "2019",
+    "summary": "Résumé en 2-3 phrases de l'apport de cet ouvrage sur le sujet du paragraphe.",
+    "citation": "Une citation représentative et plausible de l'auteur, entre guillemets, 1 à 3 phrases.",
+    "critique": "<strong>Apports :</strong> Ce que cette source apporte concrètement à l'argument. <strong>Limites :</strong> Ses angles morts ou biais éventuels.",
+    "url": "https://exemple.com/source-academique"
+  }
+]
+Varie les types (Livre, Article, Chapitre). Réponds UNIQUEMENT avec le JSON.`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+    });
+    const data = await resp.json();
+    const text = data.content.map(c=>c.text||'').join('');
+    let resources;
+    try{
+      const clean = text.replace(/```json|```/g,'').trim();
+      resources = JSON.parse(clean);
+    }catch(e){
+      const m = text.match(/\[[\s\S]*\]/);
+      if(m) resources = JSON.parse(m[0]); else throw new Error('format JSON invalide');
+    }
+    S.lastResources = resources;
+    $('res-status').textContent = `${resources.length} ressource${resources.length>1?'s':''} · ${p.title}`;
+    $('resources-container').innerHTML = resources.map(r=>resCard(r)).join('');
+  } catch(err){
+    $('res-status').textContent = 'erreur';
+    $('resources-container').innerHTML = `<div class="empty-state"><p>erreur lors de la recherche</p><small>${err.message}</small></div>`;
+  }
+}
+
+/* ── KEYBOARD ── */
+$('idea-input').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();addIdea();}});
+$('mpara-input').addEventListener('keydown',e=>{if(e.key==='Enter')confirmPara();});
+$('mfolder-input').addEventListener('keydown',e=>{if(e.key==='Enter')confirmFolder();});
+
+/* ── INIT ── */
+switchView('ideas');
+</script>
+</body>
+</html>
