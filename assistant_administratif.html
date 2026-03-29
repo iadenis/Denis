@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assistant Administratif</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080808;--s1:#101010;--s2:#161616;--s3:#1c1c1c;
+  --b1:#1f1f1f;--b2:#2a2a2a;--b3:#363636;
+  --gold:#c4a35a;--gold-dim:rgba(196,163,90,.15);--gold-mid:rgba(196,163,90,.35);
+  --txt:#e2e2e2;--txt2:#888;--txt3:#444;
+  --red:#9b3a3a;--green:#3a7a52;--blue:#3a5a8a;
+  --r:5px;--r2:9px;
+}
+body{font-family:'Geist',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;display:flex;font-size:13px;line-height:1.5}
+
+/* ─── SIDEBAR ─── */
+aside{width:52px;min-height:100vh;background:var(--s1);border-right:1px solid var(--b1);display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:2px;position:fixed;top:0;left:0;bottom:0;z-index:100;transition:width .2s ease}
+aside.expanded{width:220px}
+.sb-logo{font-family:'Instrument Serif',serif;font-size:13px;color:var(--gold);letter-spacing:.04em;height:36px;display:flex;align-items:center;justify-content:center;width:100%;margin-bottom:12px;white-space:nowrap;overflow:hidden;cursor:pointer;padding:0 14px}
+.sb-logo .logo-icon{font-size:16px;flex-shrink:0}
+.sb-logo .logo-text{margin-left:10px;opacity:0;transition:opacity .15s;white-space:nowrap;overflow:hidden}
+aside.expanded .sb-logo .logo-text{opacity:1}
+.sb-item{width:100%;height:40px;display:flex;align-items:center;padding:0 14px;cursor:pointer;border-left:2px solid transparent;color:var(--txt3);transition:all .13s;white-space:nowrap;overflow:hidden;border-radius:0;position:relative}
+.sb-item:hover{color:var(--txt2);background:var(--s2)}
+.sb-item.on{color:var(--txt);border-left-color:var(--gold);background:var(--s2)}
+.sb-item .si-ic{font-size:16px;flex-shrink:0;width:24px;text-align:center}
+.sb-item .si-label{margin-left:12px;font-size:12px;font-weight:500;opacity:0;transition:opacity .15s;white-space:nowrap}
+aside.expanded .sb-item .si-label{opacity:1}
+.sb-div{width:28px;height:1px;background:var(--b1);margin:8px 0;transition:width .2s}
+aside.expanded .sb-div{width:192px}
+.sb-toggle{margin-top:auto;width:100%;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--txt3);font-size:14px;transition:color .13s}
+.sb-toggle:hover{color:var(--txt2)}
+
+/* ─── MAIN ─── */
+main{margin-left:52px;flex:1;display:flex;flex-direction:column;min-height:100vh;transition:margin-left .2s}
+body.sb-open main{margin-left:220px}
+
+/* ─── PAGE ─── */
+.page{display:none;flex:1;padding:32px 40px;flex-direction:column;gap:0;animation:pIn .16s ease}
+.page.on{display:flex}
+@keyframes pIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.page-title{font-family:'Instrument Serif',serif;font-size:24px;color:var(--txt);margin-bottom:28px;display:flex;align-items:center;gap:12px}
+.page-title .pt-icon{font-size:20px}
+
+/* ─── FIRST RUN ─── */
+.first-run{position:fixed;inset:0;background:rgba(8,8,8,.96);z-index:999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
+.fr-box{width:420px;padding:40px;text-align:center}
+.fr-title{font-family:'Instrument Serif',serif;font-size:28px;color:var(--gold);margin-bottom:8px}
+.fr-sub{font-size:13px;color:var(--txt2);margin-bottom:28px}
+.fr-input{width:100%;background:var(--s2);border:1px solid var(--b2);border-radius:var(--r);padding:11px 14px;color:var(--txt);font-family:'Geist';font-size:15px;outline:none;text-align:center;transition:border-color .13s;margin-bottom:16px}
+.fr-input:focus{border-color:var(--gold)}
+.fr-hint{font-size:11px;color:var(--txt3);margin-bottom:20px}
+
+/* ─── BUTTONS ─── */
+.btn{font-family:'Geist';font-size:12px;font-weight:500;padding:7px 14px;border-radius:var(--r);border:none;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn-gold{background:var(--gold);color:#080808}
+.btn-gold:hover{opacity:.88}
+.btn-ghost{background:transparent;border:1px solid var(--b2);color:var(--txt2)}
+.btn-ghost:hover{border-color:var(--b3);color:var(--txt)}
+.btn-sm{padding:4px 10px;font-size:11px}
+.btn-danger{background:transparent;border:1px solid #3a1515;color:#c97070}
+.btn-danger:hover{background:#1a0808}
+
+/* ─── CATEGORY ROWS ─── */
+.cat-row{display:flex;align-items:center;padding:10px 0;border-bottom:1px solid var(--b1);cursor:pointer;transition:all .13s;gap:14px}
+.cat-row:hover .cat-row-name{color:var(--txt)}
+.cat-row:first-child{border-top:1px solid var(--b1)}
+.cat-row-icon{font-size:16px;width:22px;text-align:center;flex-shrink:0}
+.cat-row-name{font-size:13px;color:var(--txt2);flex:1;font-weight:500;transition:color .13s}
+.cat-row.active .cat-row-name{color:var(--txt)}
+.cat-row-count{font-size:10px;font-family:monospace;color:var(--txt3)}
+.cat-row-chevron{font-size:11px;color:var(--txt3);transition:transform .13s}
+.cat-row.active .cat-row-chevron{transform:rotate(90deg);color:var(--gold)}
+.cat-docs{display:none;padding:0 0 8px 36px}
+.cat-row.active+.cat-docs{display:block}
+
+/* ─── DOC ROWS ─── */
+.doc-row{display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:var(--r);cursor:pointer;transition:all .13s;margin-bottom:2px}
+.doc-row:hover{background:var(--s2)}
+.doc-row-name{font-size:12px;flex:1;color:var(--txt2)}
+.doc-row:hover .doc-row-name{color:var(--txt)}
+.doc-row-date{font-size:10px;font-family:monospace;color:var(--txt3)}
+.doc-row-actions{display:flex;gap:4px;opacity:0;transition:opacity .13s}
+.doc-row:hover .doc-row-actions{opacity:1}
+.ib{background:transparent;border:1px solid var(--b2);color:var(--txt3);border-radius:3px;padding:2px 6px;cursor:pointer;font-size:11px;transition:all .13s}
+.ib:hover{border-color:var(--gold);color:var(--gold)}
+
+/* ─── HISTORY ─── */
+.hist-wrap{margin-top:32px}
+.hist-title{font-size:10px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--txt3);margin-bottom:12px}
+.hist-item{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--b1)}
+.hist-item:last-child{border-bottom:none}
+.h-dot{width:6px;height:6px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.h-dot.add{background:var(--green)} .h-dot.mod{background:var(--gold)} .h-dot.del{background:var(--red)}
+.h-body{flex:1}
+.h-label{font-size:12px;color:var(--txt2)}
+.h-label strong{color:var(--txt);font-weight:500}
+.h-date{font-size:10px;color:var(--txt3);font-family:monospace;margin-top:1px}
+.h-restore{font-size:10px;color:var(--gold);cursor:pointer;margin-top:2px;display:inline-block}
+.h-restore:hover{text-decoration:underline}
+
+/* ─── TODO ─── */
+.todo-add-row{display:flex;gap:8px;margin-bottom:20px}
+.todo-add-row input,.todo-add-row select{background:var(--s2);border:1px solid var(--b2);border-radius:var(--r);padding:8px 12px;color:var(--txt);font-family:'Geist';font-size:13px;outline:none;transition:border-color .13s}
+.todo-add-row input{flex:1}
+.todo-add-row input:focus,.todo-add-row select:focus{border-color:var(--gold)}
+.tf-row{display:flex;gap:6px;margin-bottom:16px}
+.tf{font-size:11px;padding:3px 11px;border-radius:20px;border:1px solid var(--b2);background:transparent;color:var(--txt3);cursor:pointer;font-family:'Geist';transition:all .13s}
+.tf.on{background:var(--gold-dim);border-color:var(--gold-mid);color:var(--gold)}
+.todo-item{display:flex;align-items:flex-start;gap:11px;padding:10px 14px;background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);margin-bottom:4px;transition:all .13s}
+.todo-item.done{opacity:.38}
+.t-check{width:15px;height:15px;border-radius:50%;border:1px solid var(--b3);flex-shrink:0;margin-top:2px;cursor:pointer;transition:all .13s;display:flex;align-items:center;justify-content:center;font-size:9px}
+.todo-item.done .t-check{background:var(--green);border-color:var(--green)}
+.t-check:hover{border-color:var(--gold)}
+.t-body{flex:1;min-width:0}
+.t-text{font-size:13px;color:var(--txt)}
+.todo-item.done .t-text{text-decoration:line-through}
+.t-sub{font-size:11px;color:var(--txt3);margin-top:2px}
+.t-right{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.prio{font-size:10px;padding:2px 7px;border-radius:20px;font-family:monospace}
+.prio.high{background:rgba(155,58,58,.18);color:#c97070;border:1px solid rgba(155,58,58,.3)}
+.prio.med{background:var(--gold-dim);color:var(--gold);border:1px solid var(--gold-mid)}
+.prio.low{background:var(--s2);color:var(--txt3);border:1px solid var(--b1)}
+.t-del{background:transparent;border:none;color:var(--txt3);cursor:pointer;font-size:14px;padding:1px 3px;transition:color .13s}
+.t-del:hover{color:#c97070}
+
+/* ─── SEARCH ─── */
+.search-bar{position:relative;margin-bottom:24px}
+.search-bar input{width:100%;background:var(--s1);border:1px solid var(--b2);border-radius:var(--r2);padding:13px 18px 13px 44px;color:var(--txt);font-family:'Geist';font-size:14px;outline:none;transition:border-color .15s}
+.search-bar input:focus{border-color:var(--gold)}
+.search-bar .s-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--txt3);font-size:15px;pointer-events:none}
+.search-bar .s-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%)}
+.search-result{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:14px 16px;margin-bottom:6px;transition:border-color .13s}
+.search-result:hover{border-color:var(--b2)}
+.sr-title{font-size:13px;font-weight:500;margin-bottom:2px;color:var(--txt)}
+.sr-src{font-size:10px;color:var(--gold);font-family:monospace;margin-bottom:5px}
+.sr-desc{font-size:12px;color:var(--txt2);line-height:1.5}
+.sr-btns{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap}
+.thinking{display:flex;align-items:center;gap:10px;color:var(--txt3);font-size:12px;padding:16px 0}
+.dots{display:flex;gap:4px}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--gold);animation:pu 1.2s ease-in-out infinite}
+.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+@keyframes pu{0%,80%,100%{opacity:.2;transform:scale(.75)}40%{opacity:1;transform:scale(1)}}
+
+/* ─── MAIL TEMPLATES ─── */
+.mail-cat-select{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.mail-cat-btn{font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid var(--b2);background:transparent;color:var(--txt3);cursor:pointer;font-family:'Geist';transition:all .13s}
+.mail-cat-btn:hover,.mail-cat-btn.on{background:var(--gold-dim);border-color:var(--gold-mid);color:var(--gold)}
+.mail-template{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:16px;margin-bottom:8px}
+.mt-title{font-size:13px;font-weight:500;margin-bottom:8px;color:var(--txt)}
+.mt-content{font-size:12px;color:var(--txt2);white-space:pre-wrap;line-height:1.7;background:var(--s2);border-radius:var(--r);padding:12px 14px;font-family:monospace;border:1px solid var(--b1)}
+.mt-actions{display:flex;gap:7px;margin-top:10px}
+.mt-copy-ok{font-size:11px;color:var(--green);display:none}
+
+/* ─── TRANSLATOR ─── */
+.tr-layout{display:grid;grid-template-columns:1fr 1fr;gap:16px;flex:1}
+.tr-panel{display:flex;flex-direction:column;gap:8px}
+.tr-label-row{display:flex;align-items:center;justify-content:space-between}
+.tr-lang{background:var(--s2);border:1px solid var(--b2);border-radius:var(--r);padding:6px 10px;color:var(--txt);font-family:'Geist';font-size:12px;outline:none}
+.tr-lang:focus{border-color:var(--gold)}
+.tr-textarea{flex:1;min-height:280px;background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:14px;color:var(--txt);font-family:'Geist';font-size:13px;outline:none;resize:none;line-height:1.6;transition:border-color .13s}
+.tr-textarea:focus{border-color:var(--gold)}
+.tr-textarea[readonly]{color:var(--txt2);cursor:default}
+.tr-btn-row{display:flex;justify-content:center;margin-top:8px}
+
+/* ─── SCAN ─── */
+.scan-methods{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:24px}
+.scan-card{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r2);padding:20px 16px;text-align:center;cursor:pointer;transition:all .15s}
+.scan-card:hover{border-color:var(--b2);background:var(--s2)}
+.scan-card.active{border-color:var(--gold-mid);background:var(--gold-dim)}
+.sc-icon{font-size:28px;margin-bottom:10px}
+.sc-name{font-size:12px;font-weight:500;color:var(--txt);margin-bottom:4px}
+.sc-desc{font-size:11px;color:var(--txt3)}
+.scan-panel{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:20px;display:none}
+.scan-panel.on{display:block}
+.scan-instructions{font-size:13px;color:var(--txt2);line-height:1.8;margin-bottom:16px}
+.scan-instructions li{margin-left:18px;margin-bottom:4px}
+.file-drop{border:1px dashed var(--b2);border-radius:var(--r);padding:24px;text-align:center;cursor:pointer;transition:all .13s;color:var(--txt3)}
+.file-drop:hover{border-color:var(--gold-mid);color:var(--txt2)}
+.fd-icon{font-size:24px;margin-bottom:8px}
+.scan-result{margin-top:14px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:14px;font-size:13px;color:var(--txt2);line-height:1.6;white-space:pre-wrap;display:none;font-family:monospace}
+
+/* ─── MODAL ─── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:500;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);animation:fIn .15s ease}
+@keyframes fIn{from{opacity:0}to{opacity:1}}
+.modal{background:var(--s1);border:1px solid var(--b2);border-radius:12px;padding:26px;width:460px;max-width:94vw;max-height:90vh;overflow-y:auto;animation:mUp .17s ease}
+.modal-lg{width:580px}
+@keyframes mUp{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-title{font-family:'Instrument Serif',serif;font-size:18px;margin-bottom:20px}
+.fg{margin-bottom:13px}
+.fl{display:block;font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--txt3);margin-bottom:5px}
+.fi,.fs,.ft{width:100%;background:var(--bg);border:1px solid var(--b2);border-radius:var(--r);padding:8px 11px;color:var(--txt);font-family:'Geist';font-size:13px;outline:none;transition:border-color .13s}
+.fi:focus,.fs:focus,.ft:focus{border-color:var(--gold)}
+.fs option{background:#111}
+.ft{resize:vertical;min-height:68px}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--b1)}
+.icon-grid{display:flex;flex-wrap:wrap;gap:5px}
+.icon-opt{font-size:18px;width:34px;height:34px;border-radius:5px;border:1px solid var(--b2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .12s}
+.icon-opt.sel{border-color:var(--gold);background:var(--gold-dim)}
+.file-drop2{border:1px dashed var(--b2);border-radius:var(--r);padding:18px;text-align:center;cursor:pointer;color:var(--txt3);font-size:12px;transition:all .13s}
+.file-drop2:hover{border-color:var(--gold-mid);color:var(--txt2)}
+
+/* ─── DETAIL ─── */
+.det-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.det-field label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--txt3);display:block;margin-bottom:2px}
+.det-field span{font-size:13px}
+
+/* ─── TOASTS ─── */
+.toasts{position:fixed;bottom:18px;right:18px;z-index:999;display:flex;flex-direction:column;gap:5px}
+.toast{background:var(--s2);border:1px solid var(--b2);border-radius:var(--r);padding:9px 14px;font-size:12px;animation:tIn .17s ease;box-shadow:0 4px 18px rgba(0,0,0,.5)}
+@keyframes tIn{from{opacity:0;transform:translateX(10px)}to{opacity:1;transform:translateX(0)}}
+.toast.ok{border-left:2px solid var(--green)}
+.toast.info{border-left:2px solid var(--gold)}
+
+/* ─── EMPTY ─── */
+.empty{text-align:center;padding:50px 20px;color:var(--txt3)}
+.empty .ei{font-size:32px;margin-bottom:12px}
+.empty p{font-size:12px;margin-bottom:16px}
+
+/* ─── SECTION LABEL ─── */
+.sec{font-size:10px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--txt3);margin-bottom:12px}
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar{width:4px} ::-webkit-scrollbar-track{background:transparent} ::-webkit-scrollbar-thumb{background:var(--b2);border-radius:10px}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:640px){.tr-layout{grid-template-columns:1fr}.scan-methods{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<!-- FIRST RUN -->
+<div class="first-run" id="first-run" style="display:none">
+  <div class="fr-box">
+    <div class="fr-title">✦ Bienvenue</div>
+    <div class="fr-sub">Donnez un nom à votre assistant administratif</div>
+    <input class="fr-input" id="app-name-input" placeholder="Mon assistant…" maxlength="32" onkeydown="if(event.key==='Enter')saveAppName()" autofocus />
+    <div class="fr-hint">Vous pourrez le modifier plus tard en cliquant sur le nom.</div>
+    <button class="btn btn-gold" style="width:100%" onclick="saveAppName()">Commencer</button>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<aside id="aside">
+  <div class="sb-logo" onclick="toggleSidebar()" id="sb-logo">
+    <span class="logo-icon">✦</span>
+    <span class="logo-text" id="logo-text" ondblclick="editAppName()">Mon assistant</span>
+  </div>
+  <div class="sb-item on" id="si-docs" onclick="goTo('docs')">
+    <span class="si-ic">📂</span><span class="si-label">Documents</span>
+  </div>
+  <div class="sb-item" id="si-todo" onclick="goTo('todo')">
+    <span class="si-ic">✅</span><span class="si-label">To-do</span>
+  </div>
+  <div class="sb-div"></div>
+  <div class="sb-item" id="si-search" onclick="goTo('search')">
+    <span class="si-ic">🔍</span><span class="si-label">Formulaires</span>
+  </div>
+  <div class="sb-item" id="si-mail" onclick="goTo('mail')">
+    <span class="si-ic">✉️</span><span class="si-label">Modèles mails</span>
+  </div>
+  <div class="sb-item" id="si-translate" onclick="goTo('translate')">
+    <span class="si-ic">🌐</span><span class="si-label">Traducteur</span>
+  </div>
+  <div class="sb-item" id="si-scan" onclick="goTo('scan')">
+    <span class="si-ic">📷</span><span class="si-label">Numérisation</span>
+  </div>
+  <div class="sb-toggle" onclick="toggleSidebar()">⇆</div>
+</aside>
+
+<main>
+
+<!-- ── DOCUMENTS ── -->
+<div class="page on" id="page-docs">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+    <div class="page-title"><span class="pt-icon">📂</span>Documents</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost btn-sm" onclick="openAddCat()">+ Catégorie</button>
+      <button class="btn btn-gold btn-sm" onclick="openAddDoc()">+ Document</button>
+    </div>
+  </div>
+  <div id="cat-list"></div>
+  <div class="hist-wrap" id="hist-global"></div>
+</div>
+
+<!-- ── TODO ── -->
+<div class="page" id="page-todo">
+  <div class="page-title"><span class="pt-icon">✅</span>To-do</div>
+  <div class="todo-add-row">
+    <input id="t-in" placeholder="Nouvelle tâche…" onkeydown="if(event.key==='Enter')addTodo()" />
+    <select id="t-prio">
+      <option value="med">Moyenne</option>
+      <option value="high">Haute</option>
+      <option value="low">Basse</option>
+    </select>
+    <input id="t-due" type="date" style="background:var(--s2);border:1px solid var(--b2);border-radius:var(--r);padding:8px 10px;color:var(--txt);font-family:'Geist';font-size:12px;outline:none" />
+    <button class="btn btn-gold" onclick="addTodo()">Ajouter</button>
+  </div>
+  <div class="tf-row">
+    <button class="tf on" id="tf-all" onclick="setTF('all')">Toutes</button>
+    <button class="tf" id="tf-active" onclick="setTF('active')">En cours</button>
+    <button class="tf" id="tf-done" onclick="setTF('done')">Terminées</button>
+  </div>
+  <div id="todo-list"></div>
+</div>
+
+<!-- ── SEARCH ── -->
+<div class="page" id="page-search">
+  <div class="page-title"><span class="pt-icon">🔍</span>Formulaires officiels</div>
+  <p style="font-size:12px;color:var(--txt2);margin-bottom:20px;line-height:1.6">Recherchez un formulaire ou une démarche — l'IA suggère les documents officiels avec liens sources.</p>
+  <div class="search-bar">
+    <span class="s-icon">🔍</span>
+    <input id="s-input" placeholder="ex: formulaire RSA, renouvellement CNI, certificat de résidence, titre de séjour…" onkeydown="if(event.key==='Enter')runSearch()" />
+    <button class="btn btn-gold btn-sm s-btn" onclick="runSearch()">Rechercher</button>
+  </div>
+  <div id="s-out"></div>
+</div>
+
+<!-- ── MAIL ── -->
+<div class="page" id="page-mail">
+  <div class="page-title"><span class="pt-icon">✉️</span>Modèles de mails</div>
+  <p style="font-size:12px;color:var(--txt2);margin-bottom:18px">Sélectionnez un type de démarche pour obtenir un modèle de mail à personnaliser.</p>
+  <div class="mail-cat-select" id="mail-cats"></div>
+  <div id="mail-out"></div>
+</div>
+
+<!-- ── TRANSLATE ── -->
+<div class="page" id="page-translate">
+  <div class="page-title"><span class="pt-icon">🌐</span>Traducteur</div>
+  <div class="tr-layout">
+    <div class="tr-panel">
+      <div class="tr-label-row">
+        <select class="tr-lang" id="tr-from">
+          <option value="auto">Détecter la langue</option>
+          <option value="fr">Français</option>
+          <option value="en">Anglais</option>
+          <option value="ar">Arabe</option>
+          <option value="es">Espagnol</option>
+          <option value="pt">Portugais</option>
+          <option value="de">Allemand</option>
+          <option value="it">Italien</option>
+          <option value="nl">Néerlandais</option>
+          <option value="ro">Roumain</option>
+          <option value="pl">Polonais</option>
+          <option value="tr">Turc</option>
+          <option value="ru">Russe</option>
+          <option value="zh">Chinois</option>
+        </select>
+        <button class="btn btn-ghost btn-sm" onclick="clearTr()">Effacer</button>
+      </div>
+      <textarea class="tr-textarea" id="tr-in" placeholder="Collez ici votre texte administratif ou mail reçu…"></textarea>
+    </div>
+    <div class="tr-panel">
+      <div class="tr-label-row">
+        <select class="tr-lang" id="tr-to">
+          <option value="fr">Français</option>
+          <option value="en">Anglais</option>
+          <option value="ar">Arabe</option>
+          <option value="es">Espagnol</option>
+          <option value="pt">Portugais</option>
+          <option value="de">Allemand</option>
+          <option value="it">Italien</option>
+          <option value="nl">Néerlandais</option>
+          <option value="ro">Roumain</option>
+          <option value="pl">Polonais</option>
+          <option value="tr">Turc</option>
+          <option value="ru">Russe</option>
+          <option value="zh">Chinois</option>
+        </select>
+        <button class="btn btn-ghost btn-sm" onclick="copyTr()">Copier</button>
+      </div>
+      <textarea class="tr-textarea" id="tr-out" readonly placeholder="La traduction apparaît ici…"></textarea>
+    </div>
+  </div>
+  <div class="tr-btn-row">
+    <button class="btn btn-gold" onclick="runTranslate()">Traduire</button>
+  </div>
+</div>
+
+<!-- ── SCAN ── -->
+<div class="page" id="page-scan">
+  <div class="page-title"><span class="pt-icon">📷</span>Numérisation</div>
+  <p style="font-size:12px;color:var(--txt2);margin-bottom:20px">Choisissez votre méthode de numérisation.</p>
+  <div class="scan-methods">
+    <div class="scan-card" id="sc-upload" onclick="setScan('upload')">
+      <div class="sc-icon">📎</div>
+      <div class="sc-name">Upload fichier</div>
+      <div class="sc-desc">Photo, PDF, DOCX</div>
+    </div>
+    <div class="scan-card" id="sc-mobile" onclick="setScan('mobile')">
+      <div class="sc-icon">📱</div>
+      <div class="sc-name">Mobile</div>
+      <div class="sc-desc">Scanner avec l'app</div>
+    </div>
+    <div class="scan-card" id="sc-printer" onclick="setScan('printer')">
+      <div class="sc-icon">🖨️</div>
+      <div class="sc-name">Imprimante</div>
+      <div class="sc-desc">Via scanner bureau</div>
+    </div>
+  </div>
+
+  <div class="scan-panel" id="sp-upload">
+    <div class="file-drop" onclick="document.getElementById('scan-file').click()">
+      <div class="fd-icon">📎</div>
+      <div style="font-size:12px;margin-bottom:4px">Cliquez ou glissez un fichier</div>
+      <div style="font-size:10px;color:var(--txt3)">PDF, JPG, PNG, DOCX — l'IA extrait le texte</div>
+    </div>
+    <input type="file" id="scan-file" accept=".pdf,.jpg,.jpeg,.png,.docx" style="display:none" onchange="handleScan(this)" />
+    <div class="scan-result" id="scan-result-upload"></div>
+  </div>
+
+  <div class="scan-panel" id="sp-mobile">
+    <div class="scan-instructions">
+      <p style="margin-bottom:10px;color:var(--txt)">Comment scanner depuis votre mobile :</p>
+      <ol>
+        <li><strong>iPhone / iPad</strong> — Ouvrez l'app <em>Notes</em>, créez une note, appuyez sur 📷 → <em>Scanner des documents</em>. Exportez en PDF.</li>
+        <li><strong>Android</strong> — Ouvrez <em>Google Drive</em>, appuyez sur ＋ → <em>Scanner</em>. Le document est sauvegardé en PDF dans votre Drive.</li>
+        <li><strong>Application dédiée</strong> — <em>Adobe Scan</em> (gratuit) ou <em>Microsoft Lens</em> sont disponibles sur iOS et Android pour des scans de meilleure qualité.</li>
+        <li>Une fois le PDF obtenu, revenez ici et utilisez <strong>Upload fichier</strong> pour l'importer.</li>
+      </ol>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+      <a href="https://apps.apple.com/fr/app/adobe-scan-pdf-scanner-ocr/id1199564834" target="_blank" class="btn btn-ghost btn-sm">📱 Adobe Scan iOS</a>
+      <a href="https://play.google.com/store/apps/details?id=com.adobe.scan.android" target="_blank" class="btn btn-ghost btn-sm">🤖 Adobe Scan Android</a>
+      <a href="https://play.google.com/store/apps/details?id=com.microsoft.office.officelens" target="_blank" class="btn btn-ghost btn-sm">🔷 Microsoft Lens</a>
+    </div>
+  </div>
+
+  <div class="scan-panel" id="sp-printer">
+    <div class="scan-instructions">
+      <p style="margin-bottom:10px;color:var(--txt)">Comment scanner depuis votre imprimante / scanner bureau :</p>
+      <ol>
+        <li>Placez le document face vers le bas sur la vitre du scanner.</li>
+        <li>Ouvrez le logiciel fourni avec votre imprimante (ex : <em>HP Smart</em>, <em>Canon IJ Scan Utility</em>, <em>Epson Scan</em>).</li>
+        <li>Sélectionnez <strong>Scanner un document</strong> et choisissez le format <strong>PDF</strong> ou <strong>JPEG</strong>.</li>
+        <li>Sur Windows : cherchez <em>Télécopieur et scanner Windows</em> dans le menu Démarrer — aucun logiciel tiers nécessaire.</li>
+        <li>Sur Mac : ouvrez <em>Capture d'image</em> (dans Applications) pour scanner directement.</li>
+        <li>Sauvegardez le fichier, puis importez-le avec <strong>Upload fichier</strong>.</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- TOASTS -->
+<div class="toasts" id="toasts"></div>
+
+<!-- MODAL: doc -->
+<div class="overlay" id="m-doc" style="display:none" onclick="bgClose(event,'m-doc')">
+  <div class="modal">
+    <div class="modal-title" id="m-doc-t">Nouveau document</div>
+    <div class="fg"><label class="fl">Nom *</label><input class="fi" id="d-name" placeholder="ex: CV — Juin 2025" /></div>
+    <div class="f2">
+      <div class="fg"><label class="fl">Catégorie *</label><select class="fs" id="d-cat"></select></div>
+      <div class="fg"><label class="fl">Date</label><input class="fi" id="d-date" type="date" /></div>
+    </div>
+    <div class="fg"><label class="fl">Notes</label><textarea class="ft" id="d-notes" placeholder="Détails, remarques…"></textarea></div>
+    <div class="fg">
+      <div class="file-drop2" onclick="document.getElementById('d-file').click()">
+        <div style="font-size:18px;margin-bottom:5px">📎</div>
+        <div id="d-file-lbl">Joindre un fichier</div>
+        <small style="color:var(--txt3);font-size:10px;display:block;margin-top:3px">PDF, JPG, PNG, DOCX</small>
+      </div>
+      <input type="file" id="d-file" style="display:none" onchange="document.getElementById('d-file-lbl').textContent='✅ '+this.files[0].name" />
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeM('m-doc')">Annuler</button>
+      <button class="btn btn-gold" onclick="saveDoc()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: cat -->
+<div class="overlay" id="m-cat" style="display:none" onclick="bgClose(event,'m-cat')">
+  <div class="modal">
+    <div class="modal-title">Nouvelle catégorie</div>
+    <div class="fg"><label class="fl">Nom *</label><input class="fi" id="c-name" placeholder="ex: Assurances" /></div>
+    <div class="fg"><label class="fl">Icône</label><div class="icon-grid" id="icon-picker"></div></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeM('m-cat')">Annuler</button>
+      <button class="btn btn-gold" onclick="saveCat()">Créer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: doc detail -->
+<div class="overlay" id="m-detail" style="display:none" onclick="bgClose(event,'m-detail')">
+  <div class="modal modal-lg">
+    <div id="m-det-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" onclick="delCurDoc()">Supprimer</button>
+      <button class="btn btn-ghost" onclick="closeM('m-detail')">Fermer</button>
+      <button class="btn btn-gold btn-sm" onclick="editCurDoc()">Modifier</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: rename app -->
+<div class="overlay" id="m-rename" style="display:none" onclick="bgClose(event,'m-rename')">
+  <div class="modal" style="width:360px">
+    <div class="modal-title">Renommer l'application</div>
+    <div class="fg"><input class="fi" id="rename-in" placeholder="Nom…" onkeydown="if(event.key==='Enter')doRename()" /></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeM('m-rename')">Annuler</button>
+      <button class="btn btn-gold" onclick="doRename()">Renommer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════ STATE ════════════════════════
+const ICONS=['📄','📋','🪪','📜','🎓','💼','🏠','🚗','❤️','🏥','📱','💡','🔑','🏦','✉️','📁','⚖️','🎫','🗂️','📑','📃','🧾'];
+const DEF_CATS=[
+  {id:'diplomes',name:'Diplômes & Attestations',icon:'🎓'},
+  {id:'cv',name:'Curriculum Vitae',icon:'💼'},
+  {id:'lettres',name:'Lettres de motivation',icon:'✉️'},
+  {id:'contrats',name:'Contrats',icon:'📋'},
+  {id:'identite',name:"Documents d'identité",icon:'🪪'},
+  {id:'formulaires',name:'Formulaires',icon:'📄'},
+  {id:'copies',name:'Copies conformes',icon:'📜'},
+  {id:'autres',name:'Autres',icon:'📁'},
+];
+
+let S=(()=>{try{const s=JSON.parse(localStorage.getItem('papiers_v1'));if(s)return s;}catch(e){}
+  return{appName:'',cats:JSON.parse(JSON.stringify(DEF_CATS)),docs:[],history:[],todos:[]};})();
+function save(){localStorage.setItem('papiers_v1',JSON.stringify(S));}
+
+let curPage='docs', curDocId=null, selIcon='📁', todoF='all', activeCat=null, sbOpen=false, mailCat=null;
+
+// ════════════════════════ INIT ════════════════════════
+window.onload=()=>{
+  if(!S.appName){document.getElementById('first-run').style.display='flex';return;}
+  applyName();render();
+};
+
+function saveAppName(){
+  const v=document.getElementById('app-name-input').value.trim()||'Mon assistant';
+  S.appName=v;save();document.getElementById('first-run').style.display='none';applyName();render();
+}
+function applyName(){document.getElementById('logo-text').textContent=S.appName;document.title=S.appName;}
+function editAppName(){document.getElementById('rename-in').value=S.appName;openM('m-rename');}
+function doRename(){const v=document.getElementById('rename-in').value.trim();if(!v)return;S.appName=v;save();applyName();closeM('m-rename');toast('Renommé','info');}
+
+// ════════════════════════ NAV ════════════════════════
+function goTo(p){
+  curPage=p;
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('on'));
+  document.getElementById('page-'+p).classList.add('on');
+  document.querySelectorAll('.sb-item').forEach(x=>x.classList.remove('on'));
+  document.getElementById('si-'+p)?.classList.add('on');
+  if(p==='docs')renderDocs();
+  else if(p==='todo')renderTodo();
+  else if(p==='mail')renderMail();
+}
+
+function toggleSidebar(){
+  sbOpen=!sbOpen;
+  document.getElementById('aside').classList.toggle('expanded',sbOpen);
+  document.body.classList.toggle('sb-open',sbOpen);
+}
+
+// ════════════════════════ DOCS ════════════════════════
+function render(){renderDocs();renderTodo();}
+
+function renderDocs(){
+  const list=document.getElementById('cat-list');
+  list.innerHTML=S.cats.map(c=>{
+    const docs=S.docs.filter(d=>d.catId===c.id).sort((a,b)=>b.addedAt-a.addedAt);
+    const isActive=activeCat===c.id;
+    return`<div class="cat-row${isActive?' active':''}" onclick="toggleCat('${c.id}')">
+      <span class="cat-row-icon">${c.icon}</span>
+      <span class="cat-row-name">${c.name}</span>
+      <span class="cat-row-count">${docs.length}</span>
+      <span class="cat-row-chevron">›</span>
+    </div>
+    <div class="cat-docs">
+      ${docs.length?docs.map(d=>`
+        <div class="doc-row" onclick="openDetail('${d.id}')">
+          <span style="font-size:13px">${c.icon}</span>
+          <span class="doc-row-name">${d.name}</span>
+          <span class="doc-row-date">${d.docDate||''}</span>
+          <div class="doc-row-actions">
+            <button class="ib" onclick="event.stopPropagation();editDoc('${d.id}')">✏️</button>
+            <button class="ib" onclick="event.stopPropagation();delDoc('${d.id}')">🗑️</button>
+          </div>
+        </div>`).join(''):`<div style="font-size:11px;color:var(--txt3);padding:8px 0">Aucun document — <span style="color:var(--gold);cursor:pointer" onclick="openAddDoc('${c.id}')">+ Ajouter</span></div>`}
+    </div>`;
+  }).join('');
+
+  // Global history
+  const histEl=document.getElementById('hist-global');
+  if(S.history.length){
+    histEl.innerHTML=`<div class="hist-title">Historique des modifications</div>
+      <div class="hist-list" id="hist-items">${S.history.slice().reverse().slice(0,20).map(h=>`
+        <div class="hist-item">
+          <div class="h-dot ${h.type}"></div>
+          <div class="h-body">
+            <div class="h-label"><strong>${h.label}</strong></div>
+            <div class="h-date">${new Date(h.at).toLocaleString('fr-FR')}</div>
+            ${h.snap?`<span class="h-restore" onclick="restoreDoc('${h.docId}',${JSON.stringify(h.snap).replace(/"/g,'&quot;')})">↩ Restaurer cette version</span>`:''}
+          </div>
+        </div>`).join('')}</div>`;
+  } else histEl.innerHTML='';
+}
+
+function toggleCat(id){activeCat=(activeCat===id)?null:id;renderDocs();}
+
+function openAddDoc(precat){
+  curDocId=null;
+  document.getElementById('m-doc-t').textContent='Nouveau document';
+  document.getElementById('d-name').value='';
+  document.getElementById('d-notes').value='';
+  document.getElementById('d-date').value=today();
+  document.getElementById('d-file-lbl').textContent='Joindre un fichier';
+  document.getElementById('d-file').value='';
+  fillCatSel(precat||activeCat||S.cats[0]?.id);
+  openM('m-doc');
+}
+
+function editDoc(id){
+  curDocId=id;const d=S.docs.find(x=>x.id===id);if(!d)return;
+  document.getElementById('m-doc-t').textContent='Modifier';
+  document.getElementById('d-name').value=d.name||'';
+  document.getElementById('d-notes').value=d.notes||'';
+  document.getElementById('d-date').value=d.docDate||'';
+  if(d.fileName)document.getElementById('d-file-lbl').textContent='✅ '+d.fileName;
+  fillCatSel(d.catId);openM('m-doc');
+}
+
+function fillCatSel(sel){
+  document.getElementById('d-cat').innerHTML=S.cats.map(c=>`<option value="${c.id}"${c.id===sel?' selected':''}>${c.icon} ${c.name}</option>`).join('');
+}
+
+function saveDoc(){
+  const name=document.getElementById('d-name').value.trim();if(!name){alert('Nom requis');return;}
+  const catId=document.getElementById('d-cat').value;
+  const docDate=document.getElementById('d-date').value;
+  const notes=document.getElementById('d-notes').value.trim();
+  const fi=document.getElementById('d-file');
+  const fileName=fi.files[0]?.name||'';
+  if(curDocId){
+    const idx=S.docs.findIndex(x=>x.id===curDocId);
+    const old={...S.docs[idx]};
+    S.docs[idx]={...S.docs[idx],name,catId,docDate,notes,fileName:fileName||S.docs[idx].fileName};
+    addH({type:'mod',label:`Modifié : ${name}`,docId:curDocId,snap:old});
+    toast('Document mis à jour','ok');
+  } else {
+    const doc={id:uid(),name,catId,docDate,notes,fileName,addedAt:Date.now()};
+    S.docs.push(doc);
+    addH({type:'add',label:`Ajouté : ${name}`,docId:doc.id});
+    activeCat=catId;
+    toast('Document ajouté','ok');
+  }
+  save();closeM('m-doc');renderDocs();
+}
+
+function openDetail(id){
+  curDocId=id;const d=S.docs.find(x=>x.id===id);if(!d)return;
+  const cat=S.cats.find(c=>c.id===d.catId);
+  const hist=S.history.filter(h=>h.docId===id);
+  document.getElementById('m-det-body').innerHTML=`
+    <div class="modal-title">${cat?.icon||'📄'} ${d.name}</div>
+    <div class="det-grid">
+      <div class="det-field"><label>Catégorie</label><span>${cat?.name||'—'}</span></div>
+      <div class="det-field"><label>Date</label><span>${d.docDate||'—'}</span></div>
+      <div class="det-field"><label>Ajouté le</label><span>${new Date(d.addedAt).toLocaleDateString('fr-FR')}</span></div>
+      ${d.fileName?`<div class="det-field"><label>Fichier</label><span>📎 ${d.fileName}</span></div>`:''}
+    </div>
+    ${d.notes?`<div style="margin-bottom:16px"><div class="sec">Notes</div><div style="font-size:13px;color:var(--txt2);white-space:pre-wrap;line-height:1.7">${d.notes}</div></div>`:''}
+    ${hist.length?`<div class="sec" style="margin-bottom:10px">Historique de ce document</div>
+      <div class="hist-list">${hist.slice().reverse().map(h=>`
+        <div class="hist-item">
+          <div class="h-dot ${h.type}"></div>
+          <div class="h-body">
+            <div class="h-label">${h.label}</div>
+            <div class="h-date">${new Date(h.at).toLocaleString('fr-FR')}</div>
+            ${h.snap?`<span class="h-restore" onclick="restoreDoc('${id}',${JSON.stringify(h.snap).replace(/"/g,'&quot;')});closeM('m-detail')">↩ Restaurer cette version</span>`:''}
+          </div>
+        </div>`).join('')}
+      </div>`:'<div style="font-size:11px;color:var(--txt3)">Aucune modification enregistrée.</div>'}
+  `;
+  openM('m-detail');
+}
+
+function delCurDoc(){if(curDocId){delDoc(curDocId);closeM('m-detail');}}
+function editCurDoc(){closeM('m-detail');editDoc(curDocId);}
+function delDoc(id){
+  if(!confirm('Supprimer ce document ?'))return;
+  const d=S.docs.find(x=>x.id===id);
+  S.docs=S.docs.filter(x=>x.id!==id);
+  addH({type:'del',label:`Supprimé : ${d?.name}`,docId:id});
+  save();renderDocs();toast('Supprimé','info');
+}
+function restoreDoc(id,snap){
+  const idx=S.docs.findIndex(x=>x.id===id);if(idx<0)return;
+  const old={...S.docs[idx]};
+  S.docs[idx]={...snap,id,addedAt:S.docs[idx].addedAt};
+  addH({type:'mod',label:`Restauré : ${snap.name}`,docId:id,snap:old});
+  save();renderDocs();toast('Version restaurée','ok');
+}
+
+// ════════════════════════ CATEGORIES ════════════════════════
+function openAddCat(){selIcon='📁';document.getElementById('c-name').value='';renderIconPicker();openM('m-cat');}
+function renderIconPicker(){
+  document.getElementById('icon-picker').innerHTML=ICONS.map(ic=>`<div class="icon-opt${ic===selIcon?' sel':''}" onclick="selIcon='${ic}';renderIconPicker()">${ic}</div>`).join('');
+}
+function saveCat(){
+  const name=document.getElementById('c-name').value.trim();if(!name){alert('Nom requis');return;}
+  const id='cat_'+Date.now();
+  S.cats.push({id,name,icon:selIcon});
+  save();closeM('m-cat');renderDocs();toast('Catégorie créée','ok');
+}
+
+// ════════════════════════ TODO ════════════════════════
+function renderTodo(){
+  let todos=S.todos;
+  if(todoF==='active')todos=todos.filter(t=>!t.done);
+  else if(todoF==='done')todos=todos.filter(t=>t.done);
+  ['all','active','done'].forEach(f=>{document.getElementById('tf-'+f)?.classList.toggle('on',todoF===f);});
+  const pL={high:'Haute',med:'Moyenne',low:'Basse'};
+  document.getElementById('todo-list').innerHTML=todos.length?todos.map(t=>`
+    <div class="todo-item${t.done?' done':''}">
+      <div class="t-check" onclick="toggleTodo('${t.id}')">${t.done?'✓':''}</div>
+      <div class="t-body">
+        <div class="t-text">${t.text}</div>
+        ${t.due?`<div class="t-sub">📅 ${new Date(t.due+'T00:00:00').toLocaleDateString('fr-FR')}</div>`:''}
+      </div>
+      <div class="t-right">
+        <span class="prio ${t.prio}">${pL[t.prio]}</span>
+        <button class="t-del" onclick="delTodo('${t.id}')">×</button>
+      </div>
+    </div>`).join(''):`<div class="empty"><div class="ei">✅</div><p>Aucune tâche ici.</p></div>`;
+}
+function addTodo(){
+  const text=document.getElementById('t-in').value.trim();if(!text)return;
+  S.todos.unshift({id:uid(),text,prio:document.getElementById('t-prio').value,due:document.getElementById('t-due').value,done:false,addedAt:Date.now()});
+  save();renderTodo();document.getElementById('t-in').value='';toast('Tâche ajoutée','ok');
+}
+function toggleTodo(id){const t=S.todos.find(x=>x.id===id);if(t){t.done=!t.done;save();renderTodo();}}
+function delTodo(id){S.todos=S.todos.filter(x=>x.id!==id);save();renderTodo();}
+function setTF(f){todoF=f;renderTodo();}
+
+// ════════════════════════ SEARCH ════════════════════════
+async function runSearch(){
+  const q=document.getElementById('s-input').value.trim();if(!q)return;
+  const out=document.getElementById('s-out');
+  out.innerHTML=`<div class="thinking"><div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>Recherche en cours…</div>`;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      model:'claude-sonnet-4-20250514',max_tokens:1200,
+      system:`Expert en démarches administratives France/Belgique/Europe. Réponds UNIQUEMENT en JSON valide sans backticks ni markdown:
+{"results":[{"title":"Nom exact du formulaire","source":"Nom de l'institution officielle","url":"https://lien-direct-officiel","description":"Ce que ce document permet de faire","type":"cerfa|formulaire|attestation|démarche|guide"}]}
+Donne 3 à 5 résultats. Utilise uniquement de vrais liens officiels : service-public.fr, caf.fr, ameli.fr, impots.gouv.fr, pole-emploi.fr, prefectures, mairie, belgique.be, etc.`,
+      messages:[{role:'user',content:q}]
+    })});
+    const data=await r.json();
+    const txt=data.content?.map(c=>c.text||'').join('')||'{}';
+    let parsed;try{parsed=JSON.parse(txt);}catch(e){parsed={results:[]};}
+    const res=parsed.results||[];
+    if(!res.length){out.innerHTML=`<div style="color:var(--txt3);font-size:12px;padding:16px 0">Aucun résultat. Essayez des termes différents.</div>`;return;}
+    out.innerHTML=res.map(r=>`
+      <div class="search-result">
+        <div class="sr-title">${r.title}</div>
+        <div class="sr-src">🌐 ${r.source} · <span style="opacity:.7">${r.type||'document'}</span></div>
+        <div class="sr-desc">${r.description||''}</div>
+        <div class="sr-btns">
+          ${r.url?`<a href="${r.url}" target="_blank" class="btn btn-ghost btn-sm">Ouvrir la source officielle ↗</a>`:''}
+          <button class="btn btn-gold btn-sm" onclick="saveSearchDoc(${JSON.stringify(r).replace(/"/g,'&quot;')})">+ Enregistrer dans Documents</button>
+        </div>
+      </div>`).join('');
+  }catch(e){out.innerHTML=`<div style="color:#c97070;font-size:12px;padding:12px 0">Erreur de connexion.</div>`;}
+}
+
+function saveSearchDoc(r){
+  const doc={id:uid(),name:r.title,catId:'formulaires',docDate:today(),notes:(r.description||'')+(r.url?'\n🔗 Source : '+r.url:''),fileName:'',addedAt:Date.now()};
+  S.docs.push(doc);addH({type:'add',label:`Ajouté (recherche) : ${r.title}`,docId:doc.id});
+  save();toast('Document enregistré','ok');
+}
+
+// ════════════════════════ MAIL TEMPLATES ════════════════════════
+const MAIL_CATS=[
+  {id:'rsa',label:'RSA'},
+  {id:'logement',label:'Logement'},
+  {id:'emploi',label:'Emploi'},
+  {id:'sante',label:'Santé'},
+  {id:'impots',label:'Impôts'},
+  {id:'identite',label:'Identité / Titres'},
+  {id:'ecole',label:'École / Formation'},
+  {id:'litige',label:'Litige / Réclamation'},
+];
+const MAIL_TEMPLATES={
+  rsa:[{title:"Demande d'ouverture de droits RSA",body:`Madame, Monsieur,
+
+Je me permets de vous contacter afin d'obtenir des informations concernant ma demande d'ouverture de droits au Revenu de Solidarité Active (RSA).
+
+[Décrivez ici votre situation : composition du foyer, revenus, situation professionnelle actuelle]
+
+Je reste à votre disposition pour tout document complémentaire que vous jugeriez nécessaire.
+
+Dans l'attente de votre retour, je vous adresse mes cordiales salutations.
+
+[Prénom Nom]
+[Adresse]
+[Téléphone]
+[Email]`},{title:"Signalement d'un changement de situation RSA",body:`Madame, Monsieur,
+
+Je vous informe d'un changement de situation intervenu le [DATE] susceptible de modifier mes droits au RSA.
+
+Nature du changement :
+[ ] Changement de situation professionnelle
+[ ] Changement de situation familiale
+[ ] Changement de résidence
+[ ] Autre : ___________
+
+[Détaillez le changement]
+
+Je reste disponible pour tout renseignement complémentaire.
+
+Cordialement,
+[Prénom Nom] — Numéro allocataire : [XXXXXXX]`}],
+  logement:[{title:"Demande de logement social (HLM)",body:`Madame, Monsieur,
+
+Je vous adresse ma demande de logement social. Mon numéro de demande est le [NUMÉRO].
+
+Situation actuelle : [locataire / hébergé / sans domicile fixe]
+Revenus mensuels nets : [MONTANT] €
+Composition du foyer : [NOMBRE] personne(s)
+Logement recherché : [T1/T2/T3…]
+
+[Précisez si vous avez une situation urgente : expulsion, surpeuplement, handicap…]
+
+Pièces jointes : justificatifs de revenus, pièce d'identité, avis d'imposition.
+
+Cordialement,
+[Prénom Nom]`},{title:"Réclamation suite à refus de logement",body:`Madame, Monsieur,
+
+J'ai reçu en date du [DATE] une notification de refus de logement concernant le bien situé [ADRESSE].
+
+Je conteste cette décision pour les motifs suivants :
+[Expliquez les raisons de votre contestation]
+
+Je vous demande de bien vouloir réexaminer mon dossier.
+
+Cordialement,
+[Prénom Nom]`}],
+  emploi:[{title:"Demande d'attestation Pôle Emploi / France Travail",body:`Madame, Monsieur,
+
+Je sollicite la délivrance d'une attestation d'inscription à France Travail (anciennement Pôle Emploi) en qualité de demandeur d'emploi.
+
+Cette attestation m'est nécessaire pour : [motif : dossier logement, banque, formation…]
+
+Inscrit(e) depuis le [DATE], mon numéro de demandeur d'emploi est le [NUMÉRO].
+
+Je vous remercie par avance.
+
+Cordialement,
+[Prénom Nom]`},{title:"Demande de formation professionnelle",body:`Madame, Monsieur,
+
+Dans le cadre de mon projet de reconversion / développement de compétences, je souhaite bénéficier d'une formation en [DOMAINE].
+
+Objectif professionnel visé : [PRÉCISER]
+Formation envisagée : [NOM DE LA FORMATION] dispensée par [ORGANISME]
+Durée : [DURÉE] — Coût : [MONTANT] €
+
+Je sollicite votre accord pour la prise en charge de cette formation via [CPF / France Travail / OPCO].
+
+Cordialement,
+[Prénom Nom]`}],
+  sante:[{title:"Demande de prise en charge ALD",body:`Madame, Monsieur,
+
+Mon médecin traitant, le Dr [NOM], m'a informé(e) de la nécessité d'une prise en charge au titre d'une Affection de Longue Durée (ALD) concernant [PATHOLOGIE].
+
+Je sollicite l'examen de ma demande d'exonération du ticket modérateur conformément à l'article L.322-3 du Code de la Sécurité Sociale.
+
+Le protocole de soins a été adressé à votre service par mon médecin.
+
+Cordialement,
+[Prénom Nom] — N° Sécurité sociale : [NUMÉRO]`},{title:"Réclamation remboursement Sécurité Sociale",body:`Madame, Monsieur,
+
+Je me permets de vous contacter au sujet d'une anomalie concernant le remboursement de soins effectués le [DATE] chez [NOM PRATICIEN / ÉTABLISSEMENT].
+
+Montant payé : [MONTANT] € — Montant remboursé : [MONTANT] € — Différence : [MONTANT] €
+
+Je joins les justificatifs correspondants et vous demande de bien vouloir examiner ce dossier.
+
+Cordialement,
+[Prénom Nom] — N° Sécurité sociale : [NUMÉRO]`}],
+  impots:[{title:"Demande de délai de paiement",body:`Madame, Monsieur,
+
+En raison de difficultés financières temporaires [précisez : perte d'emploi, maladie, situation familiale], je me trouve dans l'impossibilité de régler la somme de [MONTANT] € correspondant à [TYPE D'IMPÔT] pour l'année [ANNÉE].
+
+Je sollicite l'octroi d'un délai de paiement / d'un échelonnement de ma dette fiscale.
+
+Référence de l'avis : [NUMÉRO]
+
+Je reste à votre disposition pour tout renseignement complémentaire.
+
+Cordialement,
+[Prénom Nom] — N° fiscal : [NUMÉRO]`},{title:"Signalement d'une erreur sur avis d'imposition",body:`Madame, Monsieur,
+
+En examinant mon avis d'imposition [ANNÉE], référence [NUMÉRO], j'ai constaté une erreur concernant [NATURE DE L'ERREUR].
+
+Situation correcte : [EXPLIQUEZ]
+Impact estimé : [MONTANT] €
+
+Je vous transmets les justificatifs nécessaires et vous demande de procéder à la rectification.
+
+Cordialement,
+[Prénom Nom] — N° fiscal : [NUMÉRO]`}],
+  identite:[{title:"Demande de rendez-vous préfecture",body:`Madame, Monsieur,
+
+Je souhaite obtenir un rendez-vous auprès de vos services afin de [MOTIF : renouvellement titre de séjour / première demande CNI / passeport / autre].
+
+Mes coordonnées :
+Nom : [NOM] — Prénom : [PRÉNOM]
+Date de naissance : [DATE]
+Nationalité : [NATIONALITÉ]
+Adresse : [ADRESSE COMPLÈTE]
+Téléphone : [TÉLÉPHONE]
+
+Je suis disponible [jours/créneaux préférés].
+
+Dans l'attente de votre retour, je vous adresse mes cordiales salutations.`},{title:"Demande de certificat de nationalité française",body:`Madame, Monsieur,
+
+Je vous adresse une demande de certificat de nationalité française.
+
+Je suis français(e) par [filiation / naissance sur le territoire / acquisition] depuis le [DATE si applicable].
+
+Pièces jointes : acte de naissance, justificatif de nationalité des parents [si par filiation], livret de famille.
+
+Cordialement,
+[Prénom Nom]`}],
+  ecole:[{title:"Demande de bourse scolaire / universitaire",body:`Madame, Monsieur,
+
+Je vous adresse une demande de bourse sur critères sociaux pour l'année académique [ANNÉE].
+
+Situation : [lycéen(ne) / étudiant(e)] en [FILIÈRE] à [ÉTABLISSEMENT]
+Revenus du foyer fiscal : [MONTANT] € (avis d'imposition joint)
+Composition du foyer : [NOMBRE] personne(s)
+
+Je joins l'ensemble des pièces justificatives requises.
+
+Cordialement,
+[Prénom Nom]`},{title:"Demande de VAE (Validation des Acquis)",body:`Madame, Monsieur,
+
+Je souhaite initier une démarche de Validation des Acquis de l'Expérience (VAE) en vue d'obtenir le diplôme [NOM DU DIPLÔME / CERTIFICATION].
+
+Expérience professionnelle dans le domaine : [DURÉE ET DESCRIPTION]
+
+Je souhaite être orienté(e) vers les démarches à suivre et les organismes compétents.
+
+Cordialement,
+[Prénom Nom]`}],
+  litige:[{title:"Lettre de mise en demeure",body:`Madame, Monsieur,
+
+Par la présente, je vous mets en demeure de [DÉCRIRE L'ACTION ATTENDUE : rembourser / réparer / fournir…] dans un délai de [DÉLAI, ex: 15 jours] à compter de la réception de ce courrier.
+
+Faits : [Rappel chronologique des faits]
+Fondement juridique : [si connu]
+Préjudice subi : [MONTANT ou DESCRIPTION]
+
+À défaut de règlement amiable dans ce délai, je me verrai contraint(e) d'engager les démarches judiciaires nécessaires à la défense de mes droits.
+
+[Prénom Nom]
+[Envoi recommandé avec accusé de réception]`},{title:"Réclamation auprès d'un service public",body:`Madame, Monsieur,
+
+Je me permets de vous contacter afin de signaler un dysfonctionnement / une erreur intervenu(e) le [DATE] concernant [DÉCRIRE LE PROBLÈME].
+
+Références du dossier : [NUMÉRO]
+
+Malgré [mes démarches précédentes / un délai raisonnable d'attente], ce problème n'a pas été résolu.
+
+Je vous demande de bien vouloir [ACTION ATTENDUE] dans les meilleurs délais.
+
+Cordialement,
+[Prénom Nom]`}],
+};
+
+function renderMail(){
+  document.getElementById('mail-cats').innerHTML=MAIL_CATS.map(c=>`<button class="mail-cat-btn${mailCat===c.id?' on':''}" onclick="setMailCat('${c.id}')">${c.label}</button>`).join('');
+  const out=document.getElementById('mail-out');
+  if(!mailCat){out.innerHTML=`<div class="empty"><div class="ei">✉️</div><p>Sélectionnez un type de démarche ci-dessus.</p></div>`;return;}
+  const tpls=MAIL_TEMPLATES[mailCat]||[];
+  out.innerHTML=tpls.map((t,i)=>`
+    <div class="mail-template">
+      <div class="mt-title">${t.title}</div>
+      <div class="mt-content" id="mt-${mailCat}-${i}">${t.body}</div>
+      <div class="mt-actions">
+        <button class="btn btn-gold btn-sm" onclick="copyMail('mt-${mailCat}-${i}',this)">Copier le modèle</button>
+        <span class="mt-copy-ok" id="ok-${mailCat}-${i}">✅ Copié !</span>
+      </div>
+    </div>`).join('');
+}
+function setMailCat(id){mailCat=id;renderMail();}
+function copyMail(elId,btn){
+  const txt=document.getElementById(elId).textContent;
+  navigator.clipboard.writeText(txt).then(()=>{toast('Modèle copié','ok');});
+}
+
+// ════════════════════════ TRANSLATOR ════════════════════════
+async function runTranslate(){
+  const text=document.getElementById('tr-in').value.trim();
+  if(!text){alert('Entrez un texte à traduire.');return;}
+  const from=document.getElementById('tr-from').value;
+  const to=document.getElementById('tr-to').value;
+  const out=document.getElementById('tr-out');
+  out.value='Traduction en cours…';
+  const langNames={auto:'la langue détectée',fr:'français',en:'anglais',ar:'arabe',es:'espagnol',pt:'portugais',de:'allemand',it:'italien',nl:'néerlandais',ro:'roumain',pl:'polonais',tr:'turc',ru:'russe',zh:'chinois'};
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      model:'claude-sonnet-4-20250514',max_tokens:2000,
+      system:`Tu es un traducteur expert en documents administratifs. Traduis le texte ${from==='auto'?'(détecte la langue automatiquement)':'depuis '+langNames[from]} vers ${langNames[to]}. Retourne UNIQUEMENT la traduction, sans commentaire, sans guillemets, sans explication. Conserve la mise en forme du document original.`,
+      messages:[{role:'user',content:text}]
+    })});
+    const data=await r.json();
+    out.value=data.content?.map(c=>c.text||'').join('')||'Erreur de traduction.';
+  }catch(e){out.value='Erreur de connexion.';}
+}
+function clearTr(){document.getElementById('tr-in').value='';document.getElementById('tr-out').value='';}
+function copyTr(){const v=document.getElementById('tr-out').value;if(v)navigator.clipboard.writeText(v).then(()=>toast('Copié','ok'));}
+
+// ════════════════════════ SCAN ════════════════════════
+function setScan(type){
+  ['upload','mobile','printer'].forEach(t=>{
+    document.getElementById('sc-'+t).classList.toggle('active',t===type);
+    document.getElementById('sp-'+t.replace('printer','printer')).classList.toggle('on',t===type);
+  });
+  document.getElementById('sp-upload').classList.toggle('on',type==='upload');
+  document.getElementById('sp-mobile').classList.toggle('on',type==='mobile');
+  document.getElementById('sp-printer').classList.toggle('on',type==='printer');
+}
+
+async function handleScan(input){
+  const file=input.files[0];if(!file)return;
+  const res=document.getElementById('scan-result-upload');
+  res.style.display='block';res.textContent='Extraction du texte en cours…';
+  // Read file as base64
+  const reader=new FileReader();
+  reader.onload=async(e)=>{
+    const b64=e.target.result.split(',')[1];
+    const isImage=file.type.startsWith('image/');
+    const isPdf=file.type==='application/pdf';
+    try{
+      let messages;
+      if(isImage){
+        messages=[{role:'user',content:[{type:'image',source:{type:'base64',media_type:file.type,data:b64}},{type:'text',text:'Extrais et retranscris tout le texte visible dans ce document administratif, en conservant la structure et la mise en forme. Retourne uniquement le texte extrait.'}]}];
+      } else {
+        messages=[{role:'user',content:`Ce fichier est un document (${file.name}). Je ne peux pas te l'envoyer directement ici, mais l'utilisateur a uploadé un fichier de type ${file.type}. Indique-lui comment procéder pour en extraire le texte.`}];
+      }
+      const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',max_tokens:3000,
+        messages
+      })});
+      const data=await r.json();
+      res.textContent=data.content?.map(c=>c.text||'').join('')||'Aucun texte extrait.';
+    }catch(e){res.textContent='Erreur lors de l\'extraction.';}
+  };
+  reader.readAsDataURL(file);
+}
+
+// ════════════════════════ UTILS ════════════════════════
+function uid(){return Math.random().toString(36).slice(2)+Date.now().toString(36);}
+function today(){return new Date().toISOString().split('T')[0];}
+function addH(h){S.history.push({...h,at:Date.now()});}
+function openM(id){document.getElementById(id).style.display='flex';}
+function closeM(id){document.getElementById(id).style.display='none';}
+function bgClose(e,id){if(e.target===document.getElementById(id))closeM(id);}
+function toast(msg,type='info'){
+  const c=document.getElementById('toasts');const t=document.createElement('div');
+  t.className=`toast ${type}`;t.textContent=msg;c.appendChild(t);
+  setTimeout(()=>t.remove(),3000);
+}
+</script>
+</body>
+</html>
